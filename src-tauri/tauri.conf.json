@@ -28,6 +28,7 @@
     "active": true,
     "targets": "all",
     "category": "Travel",
+    "copyright": "© 2026 Soeren3003, MIT-Lizenz",
     "shortDescription": "Planung, Routen und Kosten für Motorradtouren",
     "icon": [
       "icons/32x32.png",

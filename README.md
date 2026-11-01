@@ -9,6 +9,10 @@
   Für macOS, Windows und Linux, mit Abgleich über Nextcloud bzw. WebDAV.
 </p>
 
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/Lizenz-MIT-green" alt="Lizenz: MIT"></a>
+</p>
+
 ---
 
 ## Inhalt
@@ -307,7 +311,12 @@ Die Versionsnummer steht an drei Stellen und sollte überall gleich sein:
 
 ## Lizenz und Quellen
 
-**Lizenz:** noch festzulegen, bevor das Repository öffentlich wird (z. B. MIT oder GPL-3.0).
+Der Tourenplaner ist freie Software unter der **[MIT-Lizenz](LICENSE)**. Jeder darf ihn nutzen, verändern und
+weitergeben, auch kommerziell, solange der Copyright- und Lizenzhinweis erhalten bleibt. Die Software wird ohne
+Gewährleistung bereitgestellt.
+
+Beiträge sind willkommen. Mit einem Pull Request erklärst du dich einverstanden, dass dein Beitrag ebenfalls
+unter der MIT-Lizenz steht.
 
 Verwendete Bibliotheken und Daten:
 

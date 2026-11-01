@@ -2,6 +2,8 @@
 name = "tourenplaner"
 version = "0.1.0"
 description = "Planung, Routen und Kosten für Motorradtouren"
+license = "MIT"
+authors = ["Soeren3003"]
 edition = "2021"
 
 [lib]
