@@ -1,0 +1,18 @@
+# Abhängigkeiten und Build-Ausgaben
+node_modules/
+dist/
+src-tauri/target/
+src-tauri/gen/
+
+# Lokale Werkzeug- und Editor-Einstellungen
+.claude/
+.vscode/
+.idea/
+*.local
+.env
+.env.*
+
+# System
+.DS_Store
+Thumbs.db
+*.log
