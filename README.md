@@ -11,6 +11,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/Lizenz-MIT-green" alt="Lizenz: MIT"></a>
+  <a href="#entstanden-mit-ki"><img src="https://img.shields.io/badge/entwickelt%20mit-Claude%20%28KI%29-d97757" alt="Entwickelt mit Claude (KI)"></a>
 </p>
 
 ---
@@ -28,6 +29,7 @@
 - [Projektstruktur](#projektstruktur)
 - [Bauen und Veröffentlichen](#bauen-und-veröffentlichen)
 - [Bekannte Einschränkungen](#bekannte-einschränkungen)
+- [Entstanden mit KI](#entstanden-mit-ki)
 - [Lizenz und Quellen](#lizenz-und-quellen)
 
 ## Worum geht es?
@@ -308,6 +310,24 @@ Die Versionsnummer steht an drei Stellen und sollte überall gleich sein:
 - Die Wettervorhersage gibt es frühestens 16 Tage vor der Etappe.
 - Blockiert der OpenStreetMap-Kachelserver die App, wechselt die Karte automatisch zur Esri-Straßenkarte.
   Über das Ebenen-Symbol oben rechts lässt sich jederzeit umschalten.
+
+## Entstanden mit KI
+
+Der Tourenplaner ist in **Zusammenarbeit mit der KI [Claude](https://claude.ai) von Anthropic** entstanden.
+Genutzt wurde dafür [Claude Code](https://claude.com/claude-code).
+
+Die Aufgaben waren so verteilt:
+
+- **Mensch (Soeren3003):** Idee und Anforderungen aus der Praxis einer Motorrad-Reisegruppe, Entscheidungen
+  über Funktionen, Aufbau, Lizenz und Veröffentlichung, Prüfen und Ausprobieren der Ergebnisse.
+- **KI (Claude):** Entwurf der Architektur, Schreiben des Großteils des Quellcodes, der Tests und dieser
+  Dokumentation, Vorschläge für zusätzliche Funktionen (z. B. Tankstopps, Wetter, GPX, Roadbook, Checkliste).
+
+Commits, an denen die KI mitgearbeitet hat, sind in der Versionsgeschichte mit
+`Co-Authored-By: Claude …` gekennzeichnet.
+
+Der Code ist mit automatischen Tests abgesichert und wurde während der Entwicklung in der App ausprobiert. Wie bei jeder Software können
+trotzdem Fehler enthalten sein. Hinweise und Verbesserungen sind ausdrücklich willkommen.
 
 ## Lizenz und Quellen
 
