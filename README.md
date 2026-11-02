@@ -146,7 +146,7 @@ Die Installer stehen unter **[Releases](https://github.com/Soeren3003/tourenplan
 | --- | --- |
 | macOS (Apple Silicon und Intel) | `Tourenplaner_x.y.z_universal.dmg` |
 | Windows | `Tourenplaner_x.y.z_x64-setup.exe` oder `.msi` |
-| Linux Mint, Ubuntu, Debian | `tourenplaner_x.y.z_amd64.deb` |
+| Linux Mint, Ubuntu, Debian | `Tourenplaner_x.y.z_amd64.deb` |
 | andere Linux-Systeme | `Tourenplaner_x.y.z_amd64.AppImage` |
 
 Die App ist **nicht signiert**. Darum gilt beim ersten Start:

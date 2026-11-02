@@ -49,13 +49,13 @@ jobs:
           | --- | --- |
           | macOS (Apple Silicon und Intel) | `Tourenplaner_…_universal.dmg` |
           | Windows | `Tourenplaner_…_x64-setup.exe` (oder `.msi`) |
-          | Linux Mint, Ubuntu, Debian | `tourenplaner_…_amd64.deb` |
+          | Linux Mint, Ubuntu, Debian | `Tourenplaner_…_amd64.deb` |
           | andere Linux-Systeme | `Tourenplaner_…_amd64.AppImage` |
 
           Die App ist nicht signiert:
           - **macOS:** beim ersten Start Rechtsklick → *Öffnen* (oder `xattr -dr com.apple.quarantine /Applications/Tourenplaner.app`).
           - **Windows:** im SmartScreen-Hinweis *Weitere Informationen → Trotzdem ausführen*.
-          - **Linux Mint:** `.deb` doppelklicken und installieren, oder `sudo apt install ./tourenplaner_…_amd64.deb`.
+          - **Linux Mint:** `.deb` doppelklicken und installieren, oder `sudo apt install ./Tourenplaner_…_amd64.deb`.
           EOF
 
       - name: Release als Entwurf anlegen
