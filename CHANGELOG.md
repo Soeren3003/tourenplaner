@@ -8,6 +8,13 @@ Die Versionsnummern folgen der [semantischen Versionierung](https://semver.org/l
 - **MINOR** steigt bei neuen Funktionen, die bestehende Daten weiter lesen können.
 - **PATCH** steigt bei Fehlerbehebungen und kleinen Verbesserungen ohne neue Funktion.
 
+## [1.2.1] – 2026-11-02
+
+### Behoben
+- Das Fenster „Über Tourenplaner“ und andere Dialoge lagen hinter der Karte, z. B. hinter der Karte der nächsten
+  Tour in der Übersicht. Die Karte hält ihre Ebenen jetzt in einem eigenen Stapelkontext, und Dialoge liegen
+  immer darüber.
+
 ## [1.2.0] – 2026-11-02
 
 ### Neu
@@ -67,6 +74,7 @@ Erste veröffentlichte Version.
 - Abgleich mit Nextcloud bzw. WebDAV
 - MIT-Lizenz
 
+[1.2.1]: ../../releases/tag/v1.2.1
 [1.2.0]: ../../releases/tag/v1.2.0
 [1.1.0]: ../../releases/tag/v1.1.0
 [1.0.0]: ../../releases/tag/v1.0.0

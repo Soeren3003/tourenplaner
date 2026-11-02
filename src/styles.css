@@ -1084,7 +1084,7 @@ table.edit.fixed {
   background: rgba(10, 14, 22, 0.45);
   display: grid;
   place-items: center;
-  z-index: 50;
+  z-index: 3000;
 }
 .modal {
   background: var(--panel);
@@ -1323,6 +1323,9 @@ ul.plain {
 .map-box {
   position: relative;
   height: 380px;
+  /* Leaflet nutzt z-index bis 1000 – in der Karte halten, damit Dialoge darüber liegen */
+  isolation: isolate;
+  z-index: 0;
 }
 .map-box.tall {
   height: min(62vh, 620px);
