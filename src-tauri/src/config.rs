@@ -4,7 +4,32 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-const KEYRING_SERVICE: &str = "de.soeren3003.tourenplaner.webdav";
+use std::sync::OnceLock;
+
+/// Schlüsselbund-Dienst = App-Kennung + „.webdav“ (wird beim Start gesetzt)
+static KEYRING_SERVICE: OnceLock<String> = OnceLock::new();
+
+pub fn init_keyring(identifier: &str) {
+    let _ = KEYRING_SERVICE.set(format!("{identifier}.webdav"));
+}
+
+fn service() -> &'static str {
+    KEYRING_SERVICE.get().map(String::as_str).unwrap_or("tourenplaner.webdav")
+}
+
+/// Passwort aus dem Schlüsselbund-Eintrag einer früheren App-Kennung übernehmen.
+pub fn migrate_keyring(cfg: &LocalConfig, old_identifier: &str) {
+    let user = cfg.webdav.username.trim();
+    if user.is_empty() || load_password(cfg).is_some() {
+        return;
+    }
+    let Ok(old) = keyring::Entry::new(&format!("{old_identifier}.webdav"), user) else { return };
+    if let Ok(pw) = old.get_password() {
+        if entry(user).and_then(|e| e.set_password(&pw)).is_ok() {
+            let _ = old.delete_credential();
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
 #[serde(rename_all = "camelCase", default)]
@@ -70,11 +95,19 @@ pub fn load(config_dir: &Path, default_data_dir: PathBuf) -> LocalConfig {
 pub fn save(config_dir: &Path, cfg: &LocalConfig) -> Result<(), String> {
     fs::create_dir_all(config_dir).map_err(|e| e.to_string())?;
     let json = serde_json::to_string_pretty(cfg).map_err(|e| e.to_string())?;
-    fs::write(config_dir.join("config.json"), json).map_err(|e| e.to_string())
+    let path = config_dir.join("config.json");
+    fs::write(&path, json).map_err(|e| e.to_string())?;
+    // Kann (ohne Schlüsselbund) das App-Passwort enthalten – nur für den eigenen Benutzer lesbar.
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o600)).map_err(|e| e.to_string())?;
+    }
+    Ok(())
 }
 
 fn entry(username: &str) -> Result<keyring::Entry, keyring::Error> {
-    keyring::Entry::new(KEYRING_SERVICE, username)
+    keyring::Entry::new(service(), username)
 }
 
 /// Speichert das Passwort im System-Schlüsselbund; liefert `false`, wenn nur der Fallback ging.

@@ -22,10 +22,10 @@
  },
  {
   "kind": "npm",
-  "name": "@tauri-apps/plugin-opener",
-  "version": "2.7.2",
-  "license": "MIT OR Apache-2.0",
-  "url": "https://github.com/tauri-apps/plugins-workspace"
+  "name": "@types/pako",
+  "version": "2.0.4",
+  "license": "MIT",
+  "url": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/pako"
  },
  {
   "kind": "npm",
@@ -33,6 +33,13 @@
   "version": "3.4.3",
   "license": "MIT",
   "url": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/raf"
+ },
+ {
+  "kind": "npm",
+  "name": "@types/trusted-types",
+  "version": "2.0.7",
+  "license": "MIT",
+  "url": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/trusted-types"
  },
  {
   "kind": "crate",
@@ -100,7 +107,7 @@
  {
   "kind": "crate",
   "name": "async-executor",
-  "version": "1.14.0",
+  "version": "1.14.1",
   "license": "Apache-2.0 OR MIT",
   "url": "https://github.com/smol-rs/async-executor"
  },
@@ -166,13 +173,6 @@
   "version": "0.18.2",
   "license": "MIT",
   "url": "https://github.com/gtk-rs/gtk3-rs"
- },
- {
-  "kind": "npm",
-  "name": "atob",
-  "version": "2.1.2",
-  "license": "(MIT OR Apache-2.0)",
-  "url": "https://git.coolaj86.com/coolaj86/atob.js.git"
  },
  {
   "kind": "crate",
@@ -278,13 +278,6 @@
   "version": "6.2.0",
   "license": "BSD-3-Clause OR MIT",
   "url": "https://github.com/dropbox/rust-brotli-decompressor"
- },
- {
-  "kind": "npm",
-  "name": "btoa",
-  "version": "1.2.1",
-  "license": "(MIT OR Apache-2.0)",
-  "url": "https://git.coolaj86.com/coolaj86/btoa.js.git"
  },
  {
   "kind": "crate",
@@ -639,7 +632,7 @@
  {
   "kind": "npm",
   "name": "dompurify",
-  "version": "2.5.9",
+  "version": "3.4.17",
   "license": "(MPL-2.0 OR Apache-2.0)",
   "url": "https://github.com/cure53/DOMPurify"
  },
@@ -740,6 +733,13 @@
   "version": "0.5.4",
   "license": "Apache-2.0 OR MIT",
   "url": "https://github.com/smol-rs/event-listener-strategy"
+ },
+ {
+  "kind": "npm",
+  "name": "fast-png",
+  "version": "6.4.0",
+  "license": "MIT",
+  "url": "https://github.com/image-js/fast-png#readme"
  },
  {
   "kind": "crate",
@@ -1267,6 +1267,13 @@
   "url": "https://github.com/RustCrypto/utils"
  },
  {
+  "kind": "npm",
+  "name": "iobuffer",
+  "version": "5.4.0",
+  "license": "MIT",
+  "url": "https://github.com/image-js/iobuffer#readme"
+ },
+ {
   "kind": "crate",
   "name": "ipnet",
   "version": "2.12.2",
@@ -1367,14 +1374,14 @@
  {
   "kind": "npm",
   "name": "jspdf",
-  "version": "2.5.2",
+  "version": "4.2.1",
   "license": "MIT",
-  "url": "https://github.com/mrrio/jspdf"
+  "url": "https://github.com/parallax/jsPDF"
  },
  {
   "kind": "npm",
   "name": "jspdf-autotable",
-  "version": "3.8.4",
+  "version": "5.0.9",
   "license": "MIT",
   "url": "https://simonbengtsson.github.io/jsPDF-AutoTable"
  },
@@ -1750,6 +1757,13 @@
   "url": "https://github.com/danieldg/ordered-stream"
  },
  {
+  "kind": "npm",
+  "name": "pako",
+  "version": "2.2.0",
+  "license": "(MIT AND Zlib)",
+  "url": "nodeca/pako"
+ },
+ {
   "kind": "crate",
   "name": "pango",
   "version": "0.18.3",
@@ -1927,7 +1941,7 @@
  {
   "kind": "crate",
   "name": "quick-xml",
-  "version": "0.36.2",
+  "version": "0.41.0",
   "license": "MIT",
   "url": "https://github.com/tafia/quick-xml"
  },

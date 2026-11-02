@@ -1,4 +1,5 @@
 mod config;
+mod migrate;
 mod store;
 pub mod sync;
 mod web;
@@ -157,6 +158,10 @@ fn files_rename(state: State<AppState>, tour_id: String, name: String, new_name:
 #[tauri::command]
 fn files_open(app: tauri::AppHandle, state: State<AppState>, tour_id: String, name: String) -> R<()> {
     let p = store::project_file(&data_dir(&state), &tour_id, &name)?;
+    // Dokumente kommen auch per Sync von anderen – ausführbare Dateien nicht direkt starten.
+    if store::is_executable_name(&name) {
+        return Err("Programme und Skripte werden aus Sicherheitsgründen nicht direkt geöffnet. Mit „Zeigen“ im Ordner öffnen und vorher prüfen.".into());
+    }
     app.opener().open_path(p.to_string_lossy(), None::<&str>).map_err(|e| e.to_string())
 }
 
@@ -176,13 +181,27 @@ fn files_reveal(app: tauri::AppHandle, state: State<AppState>, tour_id: String, 
 
 // ---------- Import / Export / Internet ----------
 
+/// Nur die Dateitypen, die die App tatsächlich exportiert bzw. einliest.
+fn has_extension(path: &str, allowed: &[&str]) -> bool {
+    std::path::Path::new(path)
+        .extension()
+        .and_then(|e| e.to_str())
+        .is_some_and(|e| allowed.iter().any(|a| a.eq_ignore_ascii_case(e)))
+}
+
 #[tauri::command]
 fn export_file(target: String, bytes: Vec<u8>) -> R<()> {
+    if !has_extension(&target, &["gpx", "pdf"]) {
+        return Err("Exportiert werden nur GPX- und PDF-Dateien.".into());
+    }
     store::export_file(&target, &bytes)
 }
 
 #[tauri::command]
 fn read_text_file(path: String) -> R<String> {
+    if !has_extension(&path, &["gpx"]) {
+        return Err("Eingelesen werden nur GPX-Dateien.".into());
+    }
     let meta = fs::metadata(&path).map_err(|e| e.to_string())?;
     if meta.len() > 50 * 1024 * 1024 {
         return Err("Datei ist zu groß (max. 50 MB).".into());
@@ -217,8 +236,30 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             let config_dir = app.path().app_config_dir()?;
-            let default_data = app.path().app_data_dir()?.join("data");
-            let cfg = config::load(&config_dir, default_data);
+            let app_data = app.path().app_data_dir()?;
+            config::init_keyring(&app.config().identifier);
+
+            // Hat sich die App-Kennung geändert, die alten Ordner übernehmen.
+            let mut old_ids = Vec::new();
+            for dir in [&config_dir, &app_data] {
+                match migrate::move_previous(dir) {
+                    Ok(Some(old)) => old_ids.push(old),
+                    Ok(None) => {}
+                    Err(e) => eprintln!("Übernahme der alten Daten fehlgeschlagen: {e}"),
+                }
+            }
+            old_ids.dedup();
+
+            let mut cfg = config::load(&config_dir, app_data.join("data"));
+            for old in &old_ids {
+                if let Some(parent) = app_data.parent() {
+                    if let Some(p) = migrate::rebase(&cfg.data_dir, &parent.join(old), &app_data) {
+                        cfg.data_dir = p;
+                        let _ = config::save(&config_dir, &cfg);
+                    }
+                }
+                config::migrate_keyring(&cfg, old);
+            }
             fs::create_dir_all(cfg.data_path())?;
             app.manage(AppState { config: Mutex::new(cfg), config_dir, syncing: Default::default() });
             Ok(())

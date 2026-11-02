@@ -1,7 +1,12 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Standardrechte für das Hauptfenster",
-  "windows": ["main"],
-  "permissions": ["core:default", "dialog:default", "opener:default"]
+  "description": "Standardrechte für das Hauptfenster: nur Dateidialoge. Alles andere läuft über die eigenen, geprüften Befehle der App.",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:default",
+    "dialog:default"
+  ]
 }

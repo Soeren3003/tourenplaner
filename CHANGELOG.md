@@ -8,6 +8,37 @@ Die Versionsnummern folgen der [semantischen Versionierung](https://semver.org/l
 - **MINOR** steigt bei neuen Funktionen, die bestehende Daten weiter lesen können.
 - **PATCH** steigt bei Fehlerbehebungen und kleinen Verbesserungen ohne neue Funktion.
 
+## [1.4.1] – 2026-11-02
+
+Sicherheitsprüfung vor der Veröffentlichung.
+
+### Sicherheit
+- **Code-Einschleusung über Kartentooltips behoben:** Etappentitel und Hotelnamen wurden in Tooltips als HTML
+  eingesetzt. Ein präparierter Titel, etwa aus einer GPX-Datei oder vom Sync eines anderen, hätte so Code in der
+  App ausführen können. Sie werden jetzt immer als Text dargestellt.
+- **Content-Security-Policy** für das App-Fenster: nur eigene Skripte, Bilder nur von den Kartenservern,
+  Verbindungen nur über die App
+- **Weniger Rechte für die Oberfläche:** das ungenutzte Opener-Recht ist entfernt, nur Dateidialoge bleiben.
+- **Befehle eingeschränkt:**
+  - GPX-Import liest nur `.gpx`-Dateien, der Export schreibt nur `.gpx` und `.pdf`.
+  - Programme und Skripte unter den Dokumenten werden nicht direkt gestartet; sie können ja per Sync von anderen kommen.
+- **Sync:** Server-Pfade mit `..`, Laufwerksangaben, Backslashes, versteckten Teilen oder Steuerzeichen werden
+  ignoriert. Unter Windows hätten Backslashes sonst aus dem Datenordner herausführen können.
+- `config.json` ist nur für den eigenen Benutzer lesbar, falls ohne Schlüsselbund das Passwort darin steht.
+- **Abhängigkeiten ohne bekannte Lücken:**
+  - jsPDF 4.2 und jsPDF-AutoTable 5 (vorher DOMPurify mit kritischen Lücken)
+  - quick-xml 0.42 (DoS über präparierte Serverantworten)
+  - Vite 7 und Vitest 5 (Lücken im Entwicklungsserver)
+  - zurückgezogenes `async-executor` aktualisiert
+- Build-Workflow läuft mit reinem Lesezugriff.
+- Neue `SECURITY.md` mit Sicherheitskonzept und Meldeweg
+
+### Geändert
+- **Neue App-Kennung** `de.soeren3003.tourenplaner`. Datenordner, Einstellungen und das gespeicherte App-Passwort
+  der bisherigen Kennung werden beim ersten Start automatisch übernommen.
+- Beispieldaten: Unterkünfte mit eindeutig erfundenen Namen, keine Telefonnummern
+- README: Abschnitte „Sicherheit“ und „Hinweise zur Nutzung“ (Straßenverkehr, Daten der Mitfahrer)
+
 ## [1.4.0] – 2026-11-02
 
 Prüfung aller Lizenzen und Nutzungsbedingungen vor der Veröffentlichung.
@@ -125,6 +156,7 @@ Erste veröffentlichte Version.
 - Abgleich mit Nextcloud bzw. WebDAV
 - MIT-Lizenz
 
+[1.4.1]: ../../releases/tag/v1.4.1
 [1.4.0]: ../../releases/tag/v1.4.0
 [1.3.0]: ../../releases/tag/v1.3.0
 [1.2.1]: ../../releases/tag/v1.2.1

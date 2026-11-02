@@ -35,8 +35,10 @@
 - [Entwicklung](#entwicklung)
 - [Projektstruktur](#projektstruktur)
 - [Bauen und Veröffentlichen](#bauen-und-veröffentlichen)
+- [Sicherheit](#sicherheit)
 - [Bekannte Einschränkungen](#bekannte-einschränkungen)
 - [Entstanden mit KI](#entstanden-mit-ki)
+- [Hinweise zur Nutzung](#hinweise-zur-nutzung)
 - [Lizenz und Quellen](#lizenz-und-quellen)
 
 ## Worum geht es?
@@ -132,7 +134,7 @@ So wird gerechnet:
 | --- | --- |
 | <img src="docs/screenshots/stages.jpg" alt="Etappenplaner: Route auf der Karte, Wegpunkte, Mitfahrer der Etappe" width="440"> | <img src="docs/screenshots/costs.jpg" alt="Kosten: Ausgaben, Fremdwährung, Salden und „Wer zahlt wem?“" width="440"> |
 
-Alle Namen, Orte und Beträge in den Bildern sind erfunden.
+Personen, Unterkünfte und Beträge in den Bildern sind erfunden. Kartenausschnitte: © OpenStreetMap-Mitwirkende (ODbL).
 
 ## Installation
 
@@ -334,7 +336,8 @@ cd src-tauri && TOURENPLANER_TEST_DAV=http://127.0.0.1:8765 cargo test --test sy
 │   │   ├── sync.rs           Zwei-Wege-Abgleich mit Konfliktbehandlung
 │   │   ├── webdav.rs         schlanker WebDAV-Client
 │   │   ├── web.rs            Online-Dienste: User-Agent, 1 Anfrage/s, Zwischenspeicher
-│   │   └── config.rs         lokale Einstellungen, Passwort im Schlüsselbund
+│   │   ├── config.rs         lokale Einstellungen, Passwort im Schlüsselbund
+│   │   └── migrate.rs        Datenübernahme bei geänderter App-Kennung
 │   ├── tests/sync_dav.rs     Integrationstest gegen echten WebDAV-Server
 │   ├── icons/                App-Symbole (aus app-icon.svg erzeugt)
 │   └── tauri.conf.json
@@ -342,6 +345,7 @@ cd src-tauri && TOURENPLANER_TEST_DAV=http://127.0.0.1:8765 cargo test --test sy
 ├── scripts/                  Versionsnummer setzen, Lizenzhinweise erzeugen
 ├── docs/screenshots/         Bilder für diese README
 ├── THIRD_PARTY_LICENSES.md   Lizenztexte aller mitgelieferten Komponenten (erzeugt)
+├── SECURITY.md               Sicherheitskonzept und Melden von Lücken
 └── app-icon.svg              Quelle des App-Symbols
 ```
 
@@ -391,6 +395,33 @@ npm run set-version -- 1.2.0     # setzt die Nummer in package.json, Cargo.toml,
 git commit -am "Version 1.2.0"
 git tag -a v1.2.0 -m "Version 1.2.0"
 ```
+
+## Sicherheit
+
+Das Sicherheitskonzept und der Weg zum Melden von Lücken stehen in **[SECURITY.md](SECURITY.md)**. Kurz gesagt:
+
+- **Zugangsdaten nur lokal:** Es gibt keine Zugangsdaten im Repository. Das Nextcloud-App-Passwort liegt im Schlüsselbund.
+- **Abgeschottete Oberfläche:** Eine strikte Content-Security-Policy gilt, und Daten aus GPX-Dateien oder vom Sync werden nie als HTML eingesetzt.
+- **Geprüfte Befehle:** Was die Oberfläche anstoßen kann, ist eng begrenzt (Dateitypen, Pfade, Links), und Sync-Pfade können den Datenordner nicht verlassen.
+- **Abhängigkeiten ohne bekannte Lücken** (`npm audit`, `cargo audit`):
+
+```bash
+npm audit
+cargo install cargo-audit && (cd src-tauri && cargo audit)
+```
+
+Die Warnungen von `cargo audit` zu „unmaintained“ bzw. „unsound“ (z. B. `zvariant`, `glib`, `proc-macro-error`)
+betreffen nur den Linux-Unterbau von Tauri (GTK, D-Bus). Sie sind keine bekannten Sicherheitslücken und werden mit
+Tauri-Updates behoben.
+
+## Hinweise zur Nutzung
+
+- **Straßenverkehr:** Die App ist eine Planungshilfe. Routen, Fahrzeiten, Tank- und Ladestopps sind Schätzungen
+  aus öffentlichen Kartendaten und können falsch oder veraltet sein: gesperrte Pässe, Baustellen, Fahrverbote.
+  Unterwegs gelten Verkehrszeichen und die aktuelle Lage. Bediene die App nicht während der Fahrt.
+- **Daten der Mitfahrer:** Telefonnummern, Notfallkontakte und Notizen sind personenbezogene Daten. Trag sie nur mit
+  Einverständnis der Betroffenen ein und teile den Sync-Ordner nur mit der eigenen Gruppe.
+- **Gewährleistung:** Die Software wird ohne Gewährleistung bereitgestellt (siehe [LICENSE](LICENSE)).
 
 ## Bekannte Einschränkungen
 

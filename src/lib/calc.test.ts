@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { arrival, balances, costItems, energyInfo, normalizeRiders, settle, stageRiders } from "./calc";
 import { summarize } from "./summary";
+import { buildRoadbook } from "./export";
 import { newExpense, newHotel, newMember, newStage, newTour, defaultSettings, migrateMember } from "./defaults";
 import { bestInsertIndex, buildGpx, decodePolyline, encodePolyline, parseGpx } from "./geo";
 
@@ -174,5 +175,20 @@ describe("Mitfahrer je Etappe", () => {
     expect(sum.energy.fuel?.amount).toBe(50);
     expect(sum.memberKm(a.id)).toBe(200);
     expect(sum.memberKm(b.id)).toBe(400);
+  });
+});
+
+describe("Roadbook", () => {
+  it("erzeugt ein PDF", () => {
+    const { a, tour } = setup();
+    const st = { ...newStage(s, tour.id, tour.startDate), title: "Über den <Pass>", distanceKm: 120, durationMin: 150, waypoints: [
+      { id: "1", name: "Start", lat: 47, lon: 10 },
+      { id: "2", name: "Ziel", lat: 47.2, lon: 10.4 },
+    ] };
+    const h = { ...newHotel(tour.id, tour.startDate), name: "Hotel", price: 300, paidBy: a.id };
+    const sum = summarize(tour, { stages: [st], hotels: [h], expenses: [], members: [a], settings: s });
+    const pdf = buildRoadbook(tour, sum);
+    expect(new TextDecoder().decode(pdf.slice(0, 5))).toBe("%PDF-");
+    expect(pdf.length).toBeGreaterThan(2000);
   });
 });

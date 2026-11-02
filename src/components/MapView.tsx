@@ -59,11 +59,18 @@ function storedLayer() {
   }
 }
 
+/** Tooltip-Inhalt als reiner Text – Titel können aus GPX-Dateien oder vom Sync anderer stammen (kein HTML!). */
+function text(s: string) {
+  const el = document.createElement("span");
+  el.textContent = s;
+  return el;
+}
+
 function icon(m: MapMarker) {
-  const esc = m.label.replace(/[<>&]/g, "");
+  const esc = m.label.replace(/[<>&"']/g, "");
   return L.divIcon({
     className: "map-pin-wrap",
-    html: `<div class="map-pin ${m.shape === "square" ? "square" : ""}" style="background:${m.color}">${esc}</div>`,
+    html: `<div class="map-pin ${m.shape === "square" ? "square" : ""}" style="background:${m.color.replace(/[^#a-zA-Z0-9(),. %-]/g, "")}">${esc}</div>`,
     iconSize: [26, 26],
     iconAnchor: [13, 13],
   });
@@ -139,12 +146,12 @@ export default function MapView({
       // weißer Rand für Lesbarkeit auf jeder Karte
       L.polyline(ll, { color: "#fff", weight: (l.weight ?? 5) + 3, opacity: 0.8, interactive: false }).addTo(g);
       const pl = L.polyline(ll, { color: l.color, weight: l.weight ?? 5, opacity: 0.95, dashArray: l.dashed ? "8 8" : undefined }).addTo(g);
-      if (l.tooltip) pl.bindTooltip(l.tooltip, { sticky: true });
+      if (l.tooltip) pl.bindTooltip(text(l.tooltip), { sticky: true });
       if (l.onClick) pl.on("click", (e) => (L.DomEvent.stopPropagation(e), l.onClick!()));
     }
     for (const mk of markers) {
       const marker = L.marker([mk.pos.lat, mk.pos.lon], { icon: icon(mk), draggable: !!mk.draggable, title: mk.title, autoPan: true }).addTo(g);
-      if (mk.title) marker.bindTooltip(mk.title, { direction: "top", offset: [0, -12] });
+      if (mk.title) marker.bindTooltip(text(mk.title), { direction: "top", offset: [0, -12] });
       if (mk.onDragEnd) marker.on("dragend", () => mk.onDragEnd!({ lat: marker.getLatLng().lat, lon: marker.getLatLng().lng }));
       if (mk.onClick) marker.on("click", mk.onClick);
       if (mk.onContextMenu) marker.on("contextmenu", mk.onContextMenu);

@@ -1,7 +1,8 @@
 /**
  * Erfundene Beispieldaten für Screenshots und zum Ausprobieren.
  * Nur in der Browser-Vorschau: http://localhost:1420/?demo (überschreibt die Vorschau-Daten im localStorage).
- * Alle Namen und Telefonnummern sind ausgedacht.
+ * Personen und Unterkünfte sind frei erfunden; Ähnlichkeiten mit echten Betrieben wären Zufall.
+ * Orte und Pässe sind echt, damit die Routen sinnvoll sind.
  */
 import { DEFAULT_CHECKLIST, addDays } from "./defaults";
 
@@ -16,7 +17,7 @@ const members = [
   { id: "bea", name: "Bea", bike: "Triumph Tiger 900", drive: "fuel", tankRangeKm: 330, consumption: 5.4, chargeMinutes: 30, color: "#eb6834" },
   { id: "chris", name: "Chris", bike: "Yamaha Ténéré 700", drive: "fuel", tankRangeKm: 360, consumption: 4.6, chargeMinutes: 30, color: "#1f9d6b" },
   { id: "dani", name: "Dani", bike: "Zero DSR/X", drive: "electric", tankRangeKm: 200, consumption: 9.5, chargeMinutes: 40, color: "#9b51e0" },
-].map((m) => ({ ...base, phone: "+49 170 0000000", emergencyContact: "", notes: "", ...m }));
+].map((m) => ({ ...base, phone: "", emergencyContact: "", notes: "", ...m }));
 
 const tour = {
   ...base,
@@ -91,9 +92,9 @@ const hotel = (id: string, n: number, name: string, address: string, lat: number
 });
 
 const hotels = [
-  hotel("h1", 0, "Gasthof Zum Biker", "Imst", 47.2458, 10.7402, 0, "", { splitAmong: ["bea", "chris"], notes: "Bea und Chris übernachten bei Alex." }),
-  hotel("h2", 1, "Hotel Passblick", "Meran", 46.6702, 11.1621, 440, "alex", { charging: true }),
-  hotel("h3", 2, "Albergo Stelvio", "Bormio", 46.4682, 10.3721, 396, "bea"),
+  hotel("h1", 0, "Gasthof Beispielhof", "Imst", 47.2458, 10.7402, 0, "", { splitAmong: ["bea", "chris"], notes: "Bea und Chris übernachten bei Alex." }),
+  hotel("h2", 1, "Hotel Musterblick", "Meran", 46.6702, 11.1621, 440, "alex", { charging: true }),
+  hotel("h3", 2, "Albergo Esempio", "Bormio", 46.4682, 10.3721, 396, "bea"),
 ];
 
 const expense = (id: string, n: number, title: string, category: string, amount: number, paidBy: string, splitAmong: string[] = [], extra = {}) => ({

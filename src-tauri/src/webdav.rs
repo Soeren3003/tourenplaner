@@ -268,17 +268,30 @@ fn parse_multistatus(xml: &str) -> Result<Vec<(String, bool, String)>, String> {
                     }
                 }
                 b"resourcetype" => in_rt = false,
-                b"href" | b"getetag" => field = None,
+                b"href" | b"getetag" => {
+                    if let Some(c) = cur.as_mut() {
+                        c.0 = c.0.trim().to_string();
+                        c.2 = c.2.trim().to_string();
+                    }
+                    field = None
+                }
                 _ => {}
             },
             Ok(Event::Text(t)) => {
                 if let (Some(f), Some(c)) = (field, cur.as_mut()) {
-                    let s = t.unescape().map_err(|e| e.to_string())?;
-                    if f == 0 {
-                        c.0.push_str(s.trim());
-                    } else {
-                        c.2.push_str(s.trim());
-                    }
+                    let s = t.decode().map_err(|e| e.to_string())?;
+                    if f == 0 { c.0.push_str(&s) } else { c.2.push_str(&s) }
+                }
+            }
+            // Entitäten (&quot;, &amp;, &#34; …) liefert quick-xml als eigenes Ereignis
+            Ok(Event::GeneralRef(r)) => {
+                if let (Some(f), Some(c)) = (field, cur.as_mut()) {
+                    let name = r.decode().map_err(|e| e.to_string())?;
+                    let ch: String = match r.resolve_char_ref().map_err(|e| e.to_string())? {
+                        Some(ch) => ch.to_string(),
+                        None => quick_xml::escape::resolve_predefined_entity(&name).ok_or(format!("Unbekannte Entität &{name};"))?.to_string(),
+                    };
+                    if f == 0 { c.0.push_str(&ch) } else { c.2.push_str(&ch) }
                 }
             }
             Ok(Event::Eof) => break,

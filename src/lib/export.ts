@@ -30,7 +30,7 @@ export async function exportGpx(tour: Tour, stages: Stage[], title = tour.name) 
 }
 
 /** Roadbook zum Ausdrucken oder fürs Handy: Etappen, Unterkünfte, Kontakte, Abrechnung. */
-export async function exportRoadbook(tour: Tour, sum: TourSummary) {
+export function buildRoadbook(tour: Tour, sum: TourSummary): Uint8Array {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const cur = tour.currency;
   const name = (id: string) => sum.members.find((m) => m.id === id)?.name ?? "?";
@@ -114,6 +114,9 @@ export async function exportRoadbook(tour: Tour, sum: TourSummary) {
     );
   }
 
-  const bytes = new Uint8Array(doc.output("arraybuffer"));
-  return saveAs(`Roadbook ${safeFileName(tour.name)}.pdf`, bytes, "application/pdf");
+  return new Uint8Array(doc.output("arraybuffer"));
+}
+
+export async function exportRoadbook(tour: Tour, sum: TourSummary) {
+  return saveAs(`Roadbook ${safeFileName(tour.name)}.pdf`, buildRoadbook(tour, sum), "application/pdf");
 }

@@ -5,6 +5,10 @@ on:
   push:
     tags: ["v*"]
 
+# Nur Lesezugriff auf das Repository – der Build braucht keine weiteren Rechte.
+permissions:
+  contents: read
+
 jobs:
   build:
     strategy:

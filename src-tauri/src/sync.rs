@@ -86,6 +86,15 @@ fn scan(root: &Path, dir: &Path, prefix: &str, state: &SyncState, out: &mut BTre
     Ok(())
 }
 
+/// Server-Pfade dürfen den Datenordner nie verlassen: keine leeren, versteckten oder „..“-Teile,
+/// keine Laufwerksangaben oder Backslashes (Windows) und keine Steuerzeichen.
+pub fn safe_rel(rel: &str) -> bool {
+    !rel.is_empty()
+        && rel.split('/').all(|s| {
+            !s.is_empty() && !s.starts_with('.') && !s.contains(['\\', ':', '\0']) && !s.chars().any(char::is_control) && s.len() <= 255
+        })
+}
+
 fn local_path(root: &Path, rel: &str) -> PathBuf {
     rel.split('/').fold(root.to_path_buf(), |p, s| p.join(s))
 }
@@ -246,7 +255,7 @@ pub async fn run(root: &Path, dav: &Dav, remote_id: &str) -> Result<SyncReport, 
     let remote_dirs: HashSet<String> = listing.iter().filter(|e| e.is_dir).map(|e| e.path.clone()).collect();
     let remote: BTreeMap<String, RemoteEntry> = listing
         .into_iter()
-        .filter(|e| !e.is_dir && !e.path.split('/').any(|s| s.starts_with('.')))
+        .filter(|e| !e.is_dir && safe_rel(&e.path))
         .map(|e| (e.path.clone(), e))
         .collect();
 
@@ -269,4 +278,18 @@ pub async fn run(root: &Path, dav: &Dav, remote_id: &str) -> Result<SyncReport, 
     save_state(root, &ctx.state)?;
     ctx.report.finished_at = chrono::Local::now().to_rfc3339();
     Ok(ctx.report)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::safe_rel;
+
+    #[test]
+    fn rejects_paths_leaving_the_data_folder() {
+        assert!(safe_rel("db/tours/a.json"));
+        assert!(safe_rel("files/t1/Buchung Hütte.pdf"));
+        for bad in ["", "../x", "db/../../x", "a//b", ".sync-state.json", "files/..\\..\\x", "C:/Windows/x", "a/b\nc", "files/t/x:y"] {
+            assert!(!safe_rel(bad), "{bad:?} sollte abgelehnt werden");
+        }
+    }
 }
