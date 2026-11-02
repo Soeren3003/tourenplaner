@@ -38,6 +38,8 @@ Sicherheitsprüfung vor der Veröffentlichung.
   der bisherigen Kennung werden beim ersten Start automatisch übernommen.
 - Beispieldaten: Unterkünfte mit eindeutig erfundenen Namen, keine Telefonnummern
 - README: Abschnitte „Sicherheit“ und „Hinweise zur Nutzung“ (Straßenverkehr, Daten der Mitfahrer)
+- Build-Workflow: Ein Versions-Tag erstellt automatisch ein GitHub-Release mit Installern für macOS (universal),
+  Windows (EXE/MSI) und Linux (DEB/AppImage) und mit den Release-Notizen aus diesem Changelog.
 
 ## [1.4.0] – 2026-11-02
 

@@ -1,16 +1,86 @@
 name: Build
 
+# Versions-Tag (z. B. v1.4.1) pushen → Installer für macOS, Windows und Linux bauen und als
+# GitHub-Release veröffentlichen. Manuell gestartet (workflow_dispatch) wird nur gebaut, die
+# Installer hängen dann als Artefakte am Lauf.
 on:
   workflow_dispatch:
   push:
     tags: ["v*"]
 
-# Nur Lesezugriff auf das Repository – der Build braucht keine weiteren Rechte.
+# Standard: nur lesen. Schreibrechte bekommen nur die Jobs, die das Release anlegen.
 permissions:
   contents: read
 
 jobs:
+  create-release:
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      release_id: ${{ steps.release.outputs.result }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Versionsnummer prüfen
+        run: |
+          v="$(node -p "require('./package.json').version")"
+          if [ "v$v" != "${GITHUB_REF_NAME}" ]; then
+            echo "Tag ${GITHUB_REF_NAME} passt nicht zur Version $v in package.json" >&2
+            exit 1
+          fi
+
+      - name: Release-Notizen aus CHANGELOG.md
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          awk -v v="$v" '
+            $0 ~ "^## \\[" v "\\]" { on = 1; next }
+            on && /^## \[/ { exit }
+            on { print }
+          ' CHANGELOG.md > notes.md
+          cat >> notes.md <<'EOF'
+
+          ---
+
+          ### Installation
+
+          | System | Datei |
+          | --- | --- |
+          | macOS (Apple Silicon und Intel) | `Tourenplaner_…_universal.dmg` |
+          | Windows | `Tourenplaner_…_x64-setup.exe` (oder `.msi`) |
+          | Linux Mint, Ubuntu, Debian | `tourenplaner_…_amd64.deb` |
+          | andere Linux-Systeme | `Tourenplaner_…_amd64.AppImage` |
+
+          Die App ist nicht signiert:
+          - **macOS:** beim ersten Start Rechtsklick → *Öffnen* (oder `xattr -dr com.apple.quarantine /Applications/Tourenplaner.app`).
+          - **Windows:** im SmartScreen-Hinweis *Weitere Informationen → Trotzdem ausführen*.
+          - **Linux Mint:** `.deb` doppelklicken und installieren, oder `sudo apt install ./tourenplaner_…_amd64.deb`.
+          EOF
+
+      - name: Release als Entwurf anlegen
+        id: release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require("fs");
+            const { data } = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: context.ref.replace("refs/tags/", ""),
+              name: `Tourenplaner ${context.ref.replace("refs/tags/v", "")}`,
+              body: fs.readFileSync("notes.md", "utf8"),
+              draft: true,
+              prerelease: false,
+            });
+            return data.id;
+
   build:
+    needs: create-release
+    # läuft auch ohne Release (manueller Start), dann nur mit Artefakten
+    if: always() && (needs.create-release.result == 'success' || needs.create-release.result == 'skipped')
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -19,6 +89,7 @@ jobs:
             args: --target universal-apple-darwin
           - platform: windows-latest
             args: ""
+          # Linux Mint 21 und 22 beruhen auf Ubuntu 22.04 bzw. 24.04 – auf 22.04 gebaut läuft auf beiden.
           - platform: ubuntu-22.04
             args: ""
     runs-on: ${{ matrix.platform }}
@@ -48,8 +119,11 @@ jobs:
       - run: npm test
 
       - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           args: ${{ matrix.args }}
+          releaseId: ${{ needs.create-release.outputs.release_id }}
 
       - uses: actions/upload-artifact@v4
         with:
@@ -60,3 +134,21 @@ jobs:
             src-tauri/target/**/release/bundle/nsis/*.exe
             src-tauri/target/**/release/bundle/deb/*.deb
             src-tauri/target/**/release/bundle/appimage/*.AppImage
+
+  publish-release:
+    needs: [create-release, build]
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Entwurf veröffentlichen
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: Number("${{ needs.create-release.outputs.release_id }}"),
+              draft: false,
+            });

@@ -140,13 +140,14 @@ Personen, Unterkünfte und Beträge in den Bildern sind erfunden. Kartenausschni
 
 ### Fertige Pakete
 
-Sobald Releases veröffentlicht sind, liegen dort die Installer:
+Die Installer stehen unter **[Releases](https://github.com/Soeren3003/tourenplaner/releases/latest)**:
 
 | System | Datei |
 | --- | --- |
 | macOS (Apple Silicon und Intel) | `Tourenplaner_x.y.z_universal.dmg` |
 | Windows | `Tourenplaner_x.y.z_x64-setup.exe` oder `.msi` |
-| Linux | `.AppImage` oder `.deb` |
+| Linux Mint, Ubuntu, Debian | `tourenplaner_x.y.z_amd64.deb` |
+| andere Linux-Systeme | `Tourenplaner_x.y.z_amd64.AppImage` |
 
 Die App ist **nicht signiert**. Darum gilt beim ersten Start:
 
@@ -363,16 +364,17 @@ Windows- und Linux-Pakete müssen auf dem jeweiligen System gebaut werden.
 
 ### Über GitHub Actions
 
-Der Workflow `.github/workflows/build.yml` baut alle drei Plattformen und führt vorher die Tests aus:
+Der Workflow `.github/workflows/build.yml` führt die Tests aus und baut alle drei Plattformen:
 
-- manuell unter *Actions → Build → Run workflow*
-- automatisch bei einem Versions-Tag:
+- **Release:** Ein Versions-Tag erzeugt automatisch ein GitHub-Release. Die Notizen stammen aus dem CHANGELOG,
+  die Installer für macOS, Windows und Linux werden angehängt. Das Release wird erst sichtbar, wenn alle
+  Builds fertig sind.
   ```bash
-  git tag v0.1.0
-  git push origin v0.1.0
+  git tag -a v1.5.0 -m "Version 1.5.0"
+  git push <remote> v1.5.0
   ```
-
-Die Installer hängen danach als Artefakte am Workflow-Lauf und können in ein Release übernommen werden.
+  Das Tag muss zur Versionsnummer in `package.json` passen, sonst bricht der Workflow ab.
+- **Nur bauen:** manuell unter *Actions → Build → Run workflow*. Die Installer hängen dann als Artefakte am Lauf.
 
 ### Codeberg
 
