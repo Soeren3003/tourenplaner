@@ -1,6 +1,6 @@
 [package]
 name = "tourenplaner"
-version = "1.1.0"
+version = "1.2.0"
 description = "Planung, Routen und Kosten für Motorradtouren"
 license = "MIT"
 authors = ["Soeren3003"]

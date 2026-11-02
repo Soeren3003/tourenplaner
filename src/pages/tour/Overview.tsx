@@ -42,6 +42,7 @@ export default function Overview({ tour, sum, go }: { tour: Tour; sum: TourSumma
   const set = (patch: Partial<Tour>) => store.save("tours", { ...tour, ...patch });
   const { lines, markers } = useMemo(() => tourMapLayers(tour, sum, (id) => go("stages", id)), [tour, sum]); // eslint-disable-line react-hooks/exhaustive-deps
   const days = daysBetween(tour.startDate, tour.endDate) + 1;
+  const hasElectric = sum.members.some((m) => m.drive === "electric");
   const cur = tour.currency;
   const hotelOn = (d: string) => sum.hotels.find((h) => h.checkIn === d && h.status !== "cancelled");
 
@@ -116,7 +117,7 @@ export default function Overview({ tour, sum, go }: { tour: Tour; sum: TourSumma
                     </td>
                     <td className="r">{num(s.actualKm ?? s.distanceKm, 0)}</td>
                     <td className="r">{duration(s.actualMin ?? s.durationMin)}</td>
-                    <td className="nowrap">{s.durationMin ? arrival(s) : "–"}</td>
+                    <td className="nowrap">{s.durationMin ? arrival(s, sum.stageEnergy.get(s.id)?.chargeMinutes) : "–"}</td>
                     <td>{j === stages.length - 1 ? (hotel?.name ?? "") : ""}</td>
                     <td>
                       <Weather pos={stageEnd(s)} date={s.date} />
@@ -177,6 +178,11 @@ export default function Overview({ tour, sum, go }: { tour: Tour; sum: TourSumma
                 <NumberInput value={tour.fuelPrice} digits={2} onChange={(v) => set({ fuelPrice: v ?? 0 })} />
               </Field>
             </div>
+            {hasElectric && (
+              <Field label={`Strompreis an der Ladesäule (${cur}/kWh)`}>
+                <NumberInput value={tour.electricityPrice} digits={2} onChange={(v) => set({ electricityPrice: v ?? 0 })} />
+              </Field>
+            )}
             <Field label="Notizen">
               <textarea rows={4} value={tour.notes} placeholder="Ideen, Highlights, Pässe, Treffpunkt …" onChange={(e) => set({ notes: e.target.value })} />
             </Field>
@@ -200,18 +206,30 @@ export default function Overview({ tour, sum, go }: { tour: Tour; sum: TourSumma
             <dd>{num(sum.stats.longestKm, 0)} km</dd>
             <dt>Übernachtungen</dt>
             <dd>{sum.nights}</dd>
-            {sum.fuel && (
+            {sum.energy?.fuel && (
               <>
                 <dt>Sprit (geschätzt)</dt>
                 <dd>
-                  {num(sum.fuel.liters, 0)} l ≈ {money(sum.fuel.cost, cur)}
+                  {num(sum.energy.fuel.amount, 0)} l ≈ {money(sum.energy.fuel.cost, cur)}
                 </dd>
+                <dt>Tankstopps</dt>
+                <dd>{sum.fuelStops}</dd>
+              </>
+            )}
+            {sum.energy?.electric && (
+              <>
+                <dt>Strom (geschätzt)</dt>
+                <dd>
+                  {num(sum.energy.electric.amount, 0)} kWh ≈ {money(sum.energy.electric.cost, cur)}
+                </dd>
+                <dt>Ladestopps</dt>
+                <dd>{sum.chargeStops}</dd>
               </>
             )}
             <dt className="sep">Kosten bisher</dt>
             <dd className="sep">{money(sum.costs, cur)}</dd>
             <dt>
-              <strong>pro Person {sum.hasFuelExpenses ? "" : "(inkl. Spritschätzung)"}</strong>
+              <strong>pro Person {sum.energyEstimate > 0 ? "(inkl. Energieschätzung)" : ""}</strong>
             </dt>
             <dd>
               <strong>{money(sum.perPerson, cur)}</strong>

@@ -30,6 +30,7 @@ export const HOTEL_STATUS: Record<HotelStatus, { label: string; color: string }>
 
 export const CATEGORIES: Record<ExpenseCategory, { label: string; icon: string }> = {
   fuel: { label: "Sprit", icon: "⛽" },
+  charging: { label: "Laden (Strom)", icon: "🔌" },
   food: { label: "Essen & Trinken", icon: "🍽" },
   hotel: { label: "Unterkunft", icon: "🛏" },
   toll: { label: "Maut & Vignette", icon: "🛣" },
@@ -68,6 +69,7 @@ export function defaultSettings(): Settings {
     updatedAt: now(),
     defaultCurrency: "EUR",
     defaultFuelPrice: 1.85,
+    defaultElectricityPrice: 0.59,
     defaultRouteOptions: { useHighways: 0.1, avoidTolls: true, avoidFerries: false },
     defaultDeparture: "09:00",
     defaultPauseMinutes: 90,
@@ -81,6 +83,21 @@ export function migrateSettings(s: Partial<Settings>): Settings {
   return { ...d, ...s, defaultRouteOptions: { ...d.defaultRouteOptions, ...s.defaultRouteOptions } } as Settings;
 }
 
+/** Ältere Datensätze (vor 1.2.0) kennen nur Verbrenner. */
+export function migrateMember(m: Partial<Member> & { id: string }): Member {
+  return { drive: "fuel", chargeMinutes: 30, ...m } as Member;
+}
+
+export function migrateTour(t: Partial<Tour> & { id: string }, s: Settings): Tour {
+  return { electricityPrice: s.defaultElectricityPrice, ...t } as Tour;
+}
+
+/** Typische Werte als Vorschlag beim Wechsel des Antriebs */
+export const DRIVE_DEFAULTS: Record<"fuel" | "electric", { tankRangeKm: number; consumption: number }> = {
+  fuel: { tankRangeKm: 300, consumption: 5 },
+  electric: { tankRangeKm: 180, consumption: 9 },
+};
+
 const stamp = () => ({ id: uid(), createdAt: now(), updatedAt: now() });
 
 export function newMember(index: number): Member {
@@ -88,8 +105,10 @@ export function newMember(index: number): Member {
     ...stamp(),
     name: "",
     bike: "",
+    drive: "fuel",
     tankRangeKm: 300,
     consumption: 5,
+    chargeMinutes: 30,
     phone: "",
     emergencyContact: "",
     color: PALETTE[index % PALETTE.length],
@@ -109,6 +128,7 @@ export function newTour(s: Settings, memberIds: string[]): Tour {
     memberIds,
     currency: s.defaultCurrency,
     fuelPrice: s.defaultFuelPrice,
+    electricityPrice: s.defaultElectricityPrice,
     notes: "",
     checklist: s.checklistTemplate.map((text) => ({ id: uid(), text, done: false, assignee: "" })),
   };
@@ -152,6 +172,7 @@ export function newHotel(tourId: string, checkIn: string): Hotel {
     paidBy: "",
     splitAmong: [],
     garage: false,
+    charging: false,
     breakfast: true,
     phone: "",
     url: "",

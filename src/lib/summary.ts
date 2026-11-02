@@ -1,4 +1,4 @@
-import { costItems, fuelInfo, sortStages, tourStats } from "./calc";
+import { costItems, energyInfo, sortStages, tourStats, type EnergyInfo } from "./calc";
 import type { Expense, Hotel, Member, Settings, Stage, Tour } from "./types";
 
 interface Data {
@@ -17,11 +17,17 @@ export function summarize(tour: Tour, d: Data) {
   const items = costItems(tour, d.expenses, d.hotels);
   const stats = tourStats(stages);
   const costs = items.reduce((a, i) => a + i.amount, 0);
-  const fuel = fuelInfo(stats.km, members, d.settings.tankReserve, tour.fuelPrice);
+  const prices = { fuel: tour.fuelPrice, electricity: tour.electricityPrice ?? d.settings.defaultElectricityPrice };
+  // Stopps je Etappe (über Nacht wird voll getankt bzw. geladen), Verbrauch über die ganze Tour
+  const stageEnergy = new Map<string, EnergyInfo | null>(stages.map((s) => [s.id, energyInfo(s.distanceKm, members, d.settings.tankReserve, prices)]));
+  const energy = energyInfo(stats.km, members, d.settings.tankReserve, prices);
+  const stopsOf = (k: "fuel" | "electric") => [...stageEnergy.values()].reduce((a, e) => a + (e?.[k]?.stops ?? 0), 0);
   const hasFuelExpenses = items.some((i) => i.category === "fuel");
+  const hasChargingExpenses = items.some((i) => i.category === "charging");
   const people = Math.max(1, members.length);
-  // Solange kein Sprit erfasst ist, fließt die Schätzung in die Kosten pro Person ein.
-  const estimate = costs + (hasFuelExpenses ? 0 : (fuel?.cost ?? 0));
+  // Solange kein Sprit bzw. Strom erfasst ist, fließt die Schätzung in die Kosten pro Person ein.
+  const energyEstimate = (hasFuelExpenses ? 0 : (energy?.fuel?.cost ?? 0)) + (hasChargingExpenses ? 0 : (energy?.electric?.cost ?? 0));
+  const estimate = costs + energyEstimate;
   return {
     stages,
     hotels,
@@ -29,8 +35,13 @@ export function summarize(tour: Tour, d: Data) {
     items,
     stats,
     costs,
-    fuel,
+    energy,
+    stageEnergy,
+    fuelStops: stopsOf("fuel"),
+    chargeStops: stopsOf("electric"),
     hasFuelExpenses,
+    hasChargingExpenses,
+    energyEstimate,
     perPerson: estimate / people,
     nights: hotels.filter((h) => h.status !== "cancelled").length,
   };

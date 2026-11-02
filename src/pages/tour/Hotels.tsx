@@ -56,6 +56,7 @@ export default function Hotels({ tour, sum }: { tour: Tour; sum: TourSummary }) 
                 <div className="grow">
                   <div className={h.status === "cancelled" ? "strike" : ""}>
                     {h.name || "Ohne Namen"} {h.garage && <span title="Garage / überdachter Stellplatz">🏍</span>}
+                    {h.charging && <span title="Lademöglichkeit fürs E-Motorrad">🔌</span>}
                   </div>
                   <div className="muted small">
                     {date(h.checkIn)} · {daysBetween(h.checkIn, h.checkOut)} Nacht/Nächte
@@ -183,6 +184,12 @@ function HotelEditor({ tour, sum, hotel, onDeleted }: { tour: Tour; sum: TourSum
               <input type="checkbox" checked={hotel.garage} onChange={(e) => set({ garage: e.target.checked })} />
               Garage / sicherer Stellplatz fürs Motorrad
             </label>
+            {sum.members.some((m) => m.drive === "electric") && (
+              <label className="check">
+                <input type="checkbox" checked={!!hotel.charging} onChange={(e) => set({ charging: e.target.checked })} />
+                Lademöglichkeit fürs E-Motorrad
+              </label>
+            )}
             <label className="check">
               <input type="checkbox" checked={hotel.breakfast} onChange={(e) => set({ breakfast: e.target.checked })} />
               Frühstück inklusive

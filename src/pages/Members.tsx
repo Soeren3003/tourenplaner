@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { MemberDot } from "../components/common";
-import { Empty, Field, NumberInput } from "../components/ui";
+import { DurationInput, Empty, Field, NumberInput } from "../components/ui";
 import { confirmDialog } from "../lib/api";
 import { sortStages, tourStats } from "../lib/calc";
-import { newMember, PALETTE } from "../lib/defaults";
+import { DRIVE_DEFAULTS, newMember, PALETTE } from "../lib/defaults";
 import { num } from "../lib/format";
 import { useStore } from "../lib/store";
-import type { Member } from "../lib/types";
+import type { Drive, Member } from "../lib/types";
 
 export default function Members({ selected }: { selected?: string }) {
   const store = useStore();
@@ -41,7 +41,10 @@ export default function Members({ selected }: { selected?: string }) {
                   <div>
                     {x.name || "Ohne Namen"} {store.me === x.id && <span className="muted small">(ich)</span>}
                   </div>
-                  <div className="muted small">{x.bike || "–"}</div>
+                  <div className="muted small">
+                    {x.drive === "electric" && <span title="Elektromotorrad">⚡ </span>}
+                    {x.bike || "–"}
+                  </div>
                 </div>
               </li>
             ))}
@@ -56,6 +59,7 @@ export default function Members({ selected }: { selected?: string }) {
 function MemberEditor({ m, onDeleted }: { m: Member; onDeleted: () => void }) {
   const store = useStore();
   const set = (patch: Partial<Member>) => store.save("members", { ...m, ...patch });
+  const electric = m.drive === "electric";
   const tours = store.tours.filter((t) => t.memberIds.includes(m.id));
   const ridden = tours.reduce((sum, t) => sum + tourStats(sortStages(store.stages.filter((s) => s.tourId === t.id && s.ridden))).km, 0);
 
@@ -92,12 +96,42 @@ function MemberEditor({ m, onDeleted }: { m: Member; onDeleted: () => void }) {
         <Field label="Motorrad">
           <input value={m.bike} placeholder="z. B. BMW R 1250 GS" onChange={(e) => set({ bike: e.target.value })} />
         </Field>
-        <Field label="Reichweite je Tankfüllung" hint="Die kleinste Reichweite der Gruppe bestimmt die Tankstopps.">
+        <Field label="Antrieb">
+          <div className="segmented">
+            {(
+              [
+                ["fuel", "⛽ Verbrenner"],
+                ["electric", "⚡ Elektro"],
+              ] as [Drive, string][]
+            ).map(([d, label]) => (
+              <button
+                key={d}
+                className={m.drive === d ? "active" : ""}
+                onClick={() => {
+                  if (m.drive === d) return;
+                  // Werte des anderen Antriebs passen nicht (l ↔ kWh) – typische Werte vorschlagen
+                  set({ drive: d, ...DRIVE_DEFAULTS[d] });
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </Field>
+        <Field
+          label={electric ? "Reichweite je Akkuladung" : "Reichweite je Tankfüllung"}
+          hint={`Die kleinste Reichweite der Gruppe bestimmt die ${electric ? "Ladestopps" : "Tankstopps"}.`}
+        >
           <NumberInput value={m.tankRangeKm} digits={0} suffix="km" onChange={(v) => set({ tankRangeKm: v ?? 0 })} />
         </Field>
-        <Field label="Verbrauch">
-          <NumberInput value={m.consumption} digits={1} suffix="l/100 km" onChange={(v) => set({ consumption: v ?? 0 })} />
+        <Field label="Verbrauch" hint={electric ? "Landstraße realistisch: 7–12 kWh/100 km" : undefined}>
+          <NumberInput value={m.consumption} digits={1} suffix={electric ? "kWh/100 km" : "l/100 km"} onChange={(v) => set({ consumption: v ?? 0 })} />
         </Field>
+        {electric && (
+          <Field label="Dauer eines Ladestopps" hint="Schnellladen bis ca. 80 %; wird zur Ankunftszeit addiert.">
+            <DurationInput minutes={m.chargeMinutes} onChange={(v) => set({ chargeMinutes: v })} />
+          </Field>
+        )}
         <Field label="Telefon">
           <input value={m.phone} onChange={(e) => set({ phone: e.target.value })} />
         </Field>

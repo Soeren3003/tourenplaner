@@ -5,14 +5,20 @@ export interface Entity {
   updatedAt: string;
 }
 
+/** Antrieb: Verbrenner (Liter) oder Elektro (kWh) */
+export type Drive = "fuel" | "electric";
+
 export interface Member extends Entity {
   name: string;
   /** Motorrad, z. B. „BMW R 1250 GS“ */
   bike: string;
-  /** Reichweite mit einer Tankfüllung in km */
+  drive: Drive;
+  /** Reichweite mit einer Tank- bzw. Akkuladung in km */
   tankRangeKm: number;
-  /** Verbrauch in l/100 km */
+  /** Verbrauch in l/100 km (Verbrenner) bzw. kWh/100 km (Elektro) */
   consumption: number;
+  /** übliche Dauer eines Ladestopps in Minuten (nur Elektro) */
+  chargeMinutes: number;
   phone: string;
   emergencyContact: string;
   color: string;
@@ -39,6 +45,8 @@ export interface Tour extends Entity {
   currency: string;
   /** Spritpreis für die Kostenschätzung (je Liter, in Tourwährung) */
   fuelPrice: number;
+  /** Strompreis an Ladesäulen (je kWh, in Tourwährung) */
+  electricityPrice: number;
   notes: string;
   checklist: ChecklistItem[];
 }
@@ -106,6 +114,8 @@ export interface Hotel extends Entity {
   /** Aufteilung; leer = alle Teilnehmer der Tour */
   splitAmong: string[];
   garage: boolean;
+  /** Steckdose/Wallbox fürs E-Motorrad über Nacht */
+  charging: boolean;
   breakfast: boolean;
   phone: string;
   url: string;
@@ -113,7 +123,7 @@ export interface Hotel extends Entity {
   notes: string;
 }
 
-export type ExpenseCategory = "fuel" | "food" | "hotel" | "toll" | "ferry" | "fee" | "repair" | "other";
+export type ExpenseCategory = "fuel" | "charging" | "food" | "hotel" | "toll" | "ferry" | "fee" | "repair" | "other";
 
 export interface Expense extends Entity {
   tourId: string;
@@ -135,6 +145,7 @@ export interface Settings {
   updatedAt: string;
   defaultCurrency: string;
   defaultFuelPrice: number;
+  defaultElectricityPrice: number;
   defaultRouteOptions: RouteOptions;
   defaultDeparture: string;
   defaultPauseMinutes: number;

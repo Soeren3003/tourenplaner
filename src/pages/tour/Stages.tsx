@@ -3,11 +3,11 @@ import MapView, { type MapLine, type MapMarker } from "../../components/MapView"
 import { DurationInput, Empty, Field, NumberInput } from "../../components/ui";
 import { Weather } from "../../components/Weather";
 import { api, confirmDialog, pickTextFile } from "../../lib/api";
-import { arrival, fuelInfo } from "../../lib/calc";
+import { arrival, energyInfo, type EnergyGroup } from "../../lib/calc";
 import { addDays, newStage, uid } from "../../lib/defaults";
 import { dayNo, exportGpx } from "../../lib/export";
 import { date, duration, num } from "../../lib/format";
-import { bestInsertIndex, decodePolyline, encodePolyline, parseGpx, pathLength, simplify } from "../../lib/geo";
+import { bestInsertIndex, decodePolyline, encodePolyline, parseGpx, pathLength, pointsAlong, simplify } from "../../lib/geo";
 import { reverseGeocode, routeMotorcycle, searchPlaces, type Place } from "../../lib/services";
 import { useStore } from "../../lib/store";
 import type { TourSummary } from "../../lib/summary";
@@ -159,6 +159,20 @@ function StageEditor({ tour, sum, stage, onNext, onDeleted }: { tour: Tour; sum:
 
   const reverse = () => setWaypoints(stage.waypoints.slice().reverse());
 
+  // ---------- Tank- und Ladestopps ----------
+  const energy = energyInfo(stage.distanceKm, sum.members, store.settings.tankReserve, {
+    fuel: tour.fuelPrice,
+    electricity: tour.electricityPrice ?? store.settings.defaultElectricityPrice,
+  });
+  const stops = useMemo(() => {
+    const route = stage.geometry ? decodePolyline(stage.geometry) : [];
+    // Die Routen-km stammen vom Router, die Linie ist vereinfacht – Positionen darauf skalieren.
+    const scale = route.length > 1 && stage.distanceKm ? pathLength(route) / stage.distanceKm : 1;
+    const along = (g: EnergyGroup | null) =>
+      g && route.length > 1 ? pointsAlong(route, g.stopKm.map((k) => k * scale)).map((pos, i) => ({ km: g.stopKm[i], pos, drive: g.drive })) : [];
+    return [...along(energy?.fuel ?? null), ...along(energy?.electric ?? null)].sort((a, b) => a.km - b.km);
+  }, [stage.geometry, stage.distanceKm, energy?.fuel?.rangeKm, energy?.electric?.rangeKm]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ---------- Karte ----------
   const { lines, markers } = useMemo(() => {
     const lines: MapLine[] = sum.stages
@@ -197,8 +211,18 @@ function StageEditor({ tour, sum, stage, onNext, onDeleted }: { tour: Tour; sum:
         onContextMenu: () => removePoint(w.id),
       });
     });
+    stops.forEach((st, i) =>
+      markers.push({
+        id: `stop-${i}`,
+        pos: st.pos,
+        label: st.drive === "electric" ? "⚡" : "⛽",
+        color: st.drive === "electric" ? "#0f8fa8" : "#c99a06",
+        title: `${st.drive === "electric" ? "Ladestopp" : "Tankstopp"} bei ca. km ${Math.round(st.km)} – klicken für Suche in der Nähe`,
+        onClick: () => api.openUrl(nearbyUrl(st.pos, st.drive)),
+      }),
+    );
     return { lines, markers };
-  }, [stage, sum.stages, sum.hotels, tour]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [stage, sum.stages, sum.hotels, tour, stops]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ---------- GPX ----------
   const importGpx = async () => {
@@ -238,9 +262,9 @@ function StageEditor({ tour, sum, stage, onNext, onDeleted }: { tour: Tour; sum:
     onDeleted();
   };
 
-  const fuel = fuelInfo(stage.distanceKm, sum.members, store.settings.tankReserve, tour.fuelPrice);
   const tourDays = Array.from({ length: Math.max(1, Math.min(60, Math.round((Date.parse(tour.endDate) - Date.parse(tour.startDate)) / 86_400_000) + 1)) }, (_, i) => addDays(tour.startDate, i));
   const hotelTonight = sum.hotels.find((h) => h.checkIn === stage.date && h.lat !== null && h.status !== "cancelled");
+  const tonight = sum.hotels.find((h) => h.checkIn === stage.date && h.status !== "cancelled");
 
   return (
     <div className="stage-editor">
@@ -261,10 +285,15 @@ function StageEditor({ tour, sum, stage, onNext, onDeleted }: { tour: Tour; sum:
             <b>{duration(stage.durationMin)}</b> h Fahrzeit
           </span>
           <span>
-            Abfahrt {stage.departure} → Ankunft ca. <b>{stage.durationMin ? arrival(stage) : "–"}</b>
+            Abfahrt {stage.departure} → Ankunft ca. <b>{stage.durationMin ? arrival(stage, energy?.chargeMinutes) : "–"}</b>
           </span>
-          {fuel && fuel.stops > 0 && (
-            <span title={`Reichweite ${fuel.limitedBy}: ${fuel.rangeKm} km (mit Reserve)`}>⛽ {fuel.stops}× tanken</span>
+          {energy?.fuel && energy.fuel.stops > 0 && (
+            <span title={`Reichweite ${energy.fuel.limitedBy}: ${energy.fuel.rangeKm} km (mit Reserve)`}>⛽ {energy.fuel.stops}× tanken</span>
+          )}
+          {energy?.electric && energy.electric.stops > 0 && (
+            <span title={`Reichweite ${energy.electric.limitedBy}: ${energy.electric.rangeKm} km (mit Reserve)`}>
+              ⚡ {energy.electric.stops}× laden (+{duration(energy.chargeMinutes)} h)
+            </span>
           )}
           {routing && <span className="muted">Route wird berechnet …</span>}
           {stage.source === "gpx" && <span className="badge badge-teal">aus GPX</span>}
@@ -407,19 +436,55 @@ function StageEditor({ tour, sum, stage, onNext, onDeleted }: { tour: Tour; sum:
             <p className="muted small">Vorhersage erscheint ab 16 Tage vor der Etappe (Open-Meteo).</p>
           </section>
 
-          {fuel && (
+          {energy && (
             <section className="card">
-              <h2>Tanken</h2>
+              <h2>{energy.electric ? (energy.fuel ? "Tanken & Laden" : "Laden") : "Tanken"}</h2>
               <dl className="kv-list">
-                <dt>Kleinste Reichweite</dt>
-                <dd>
-                  {fuel.rangeKm} km ({fuel.limitedBy})
-                </dd>
-                <dt>Tankstopps</dt>
-                <dd>{fuel.stops}</dd>
-                <dt>Sprit gesamt</dt>
-                <dd>{num(fuel.liters, 1)} l</dd>
+                {energy.fuel && (
+                  <>
+                    <dt>⛽ Kleinste Reichweite</dt>
+                    <dd>
+                      {energy.fuel.rangeKm} km ({energy.fuel.limitedBy})
+                    </dd>
+                    <dt>Tankstopps</dt>
+                    <dd>{energy.fuel.stops}</dd>
+                    <dt>Sprit gesamt</dt>
+                    <dd>{num(energy.fuel.amount, 1)} l</dd>
+                  </>
+                )}
+                {energy.electric && (
+                  <>
+                    <dt className={energy.fuel ? "sep" : ""}>⚡ Kleinste Reichweite</dt>
+                    <dd className={energy.fuel ? "sep" : ""}>
+                      {energy.electric.rangeKm} km ({energy.electric.limitedBy})
+                    </dd>
+                    <dt>Ladestopps</dt>
+                    <dd>{energy.electric.stops}</dd>
+                    <dt>Zusätzliche Ladezeit</dt>
+                    <dd>{duration(energy.chargeMinutes)} h</dd>
+                    <dt>Strom gesamt</dt>
+                    <dd>{num(energy.electric.amount, 1)} kWh</dd>
+                  </>
+                )}
               </dl>
+              {stops.length > 0 && (
+                <ul className="plain stop-list small">
+                  {stops.map((st, i) => (
+                    <li key={i} className="row between">
+                      <span>
+                        {st.drive === "electric" ? "⚡ Laden" : "⛽ Tanken"} bei ca. km {Math.round(st.km)}
+                      </span>
+                      <button className="link small" onClick={() => api.openUrl(nearbyUrl(st.pos, st.drive))}>
+                        {st.drive === "electric" ? "Ladesäulen" : "Tankstellen"} suchen
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {energy.electric && <p className="muted small">Geplant wird mit vollem Akku am Morgen (über Nacht im Hotel laden).</p>}
+              {energy.electric && tonight && !tonight.charging && (
+                <div className="alert small">🔌 Für „{tonight.name || "die Unterkunft"}“ ist keine Lademöglichkeit eingetragen – morgen früh evtl. nicht voll geladen.</div>
+              )}
             </section>
           )}
 
@@ -430,6 +495,12 @@ function StageEditor({ tour, sum, stage, onNext, onDeleted }: { tour: Tour; sum:
       </div>
     </div>
   );
+}
+
+/** Suche nach Tankstellen bzw. Ladesäulen rund um einen Punkt (Google Maps) */
+function nearbyUrl(p: LatLon, drive: "fuel" | "electric") {
+  const what = drive === "electric" ? "Ladestation" : "Tankstelle";
+  return `https://www.google.com/maps/search/${encodeURIComponent(what)}/@${p.lat.toFixed(5)},${p.lon.toFixed(5)},13z`;
 }
 
 function RouteToggles({ options, onChange }: { options: RouteOptions; onChange: (o: RouteOptions) => void }) {

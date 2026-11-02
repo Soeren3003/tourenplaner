@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api, type Collection } from "./api";
-import { defaultSettings, migrateSettings, now } from "./defaults";
+import { defaultSettings, migrateMember, migrateSettings, migrateTour, now } from "./defaults";
 import type { Expense, Hotel, LocalConfig, Member, Settings, Stage, SyncReport, Tour } from "./types";
 
 type Entity = { id: string; updatedAt: string };
@@ -114,14 +114,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const reload = useCallback(async () => {
     const [s, ...lists] = await Promise.all([api.dbList<Settings>("settings"), ...LISTS.map((c) => api.dbList<Entity>(c))]);
     const stored = s.find((x) => x.id === "settings");
-    if (stored) setSettings(migrateSettings(stored));
-    else {
-      const d = defaultSettings();
-      setSettings(d);
-      await api.dbPut("settings", d.id, d);
-    }
+    const cur = stored ? migrateSettings(stored) : defaultSettings();
+    setSettings(cur);
+    if (!stored) await api.dbPut("settings", cur.id, cur);
     const next = { ...EMPTY } as Record<ListCollection, Entity[]>;
     LISTS.forEach((c, i) => (next[c] = lists[i]));
+    next.members = (next.members as Member[]).map(migrateMember);
+    next.tours = (next.tours as Tour[]).map((t) => migrateTour(t, cur));
     (next.members as Member[]).sort((a, b) => a.name.localeCompare(b.name, "de"));
     (next.tours as Tour[]).sort((a, b) => b.startDate.localeCompare(a.startDate));
     setData(next as unknown as Data);

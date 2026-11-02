@@ -4,7 +4,7 @@ import { MemberDot, MemberPicker } from "../../components/common";
 import { Empty, NumberInput } from "../../components/ui";
 import { balances, byCategory, expenseAmount, settle } from "../../lib/calc";
 import { CATEGORIES, CURRENCIES, newExpense } from "../../lib/defaults";
-import { date, money } from "../../lib/format";
+import { date, money, num } from "../../lib/format";
 import { useStore } from "../../lib/store";
 import type { TourSummary } from "../../lib/summary";
 import type { Expense, ExpenseCategory, Tour } from "../../lib/types";
@@ -238,14 +238,22 @@ export default function Costs({ tour, sum }: { tour: Tour; sum: TourSummary }) {
           </section>
         )}
 
-        {sum.fuel && !sum.hasFuelExpenses && (
+        {sum.energyEstimate > 0 && (
           <section className="card">
-            <h2>Spritschätzung</h2>
-            <p className="small">
-              {sum.stats.km} km × Verbrauch der Gruppe ≈ <strong>{sum.fuel.liters} l</strong> × {money(tour.fuelPrice, cur)} = <strong>{m(sum.fuel.cost)}</strong>
-              <br />
-              <span className="muted">Wird ersetzt, sobald echte Tankbelege erfasst sind.</span>
-            </p>
+            <h2>Energieschätzung</h2>
+            {sum.energy?.fuel && !sum.hasFuelExpenses && (
+              <p className="small">
+                ⛽ {num(sum.stats.km, 0)} km × Verbrauch der Verbrenner ≈ <strong>{num(sum.energy.fuel.amount, 1)} l</strong> × {money(tour.fuelPrice, cur)} ={" "}
+                <strong>{m(sum.energy.fuel.cost)}</strong>
+              </p>
+            )}
+            {sum.energy?.electric && !sum.hasChargingExpenses && (
+              <p className="small">
+                🔌 {num(sum.stats.km, 0)} km × Verbrauch der E-Motorräder ≈ <strong>{num(sum.energy.electric.amount, 1)} kWh</strong> × {money(tour.electricityPrice, cur)} ={" "}
+                <strong>{m(sum.energy.electric.cost)}</strong>
+              </p>
+            )}
+            <p className="muted small">Wird ersetzt, sobald echte Tank- bzw. Ladebelege (Kategorie „Sprit“ bzw. „Laden“) erfasst sind.</p>
           </section>
         )}
       </aside>

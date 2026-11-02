@@ -73,7 +73,7 @@ export async function exportRoadbook(tour: Tour, sum: TourSummary) {
       s.title || s.waypoints.map((w) => w.name).filter(Boolean).join(" – "),
       num(s.distanceKm, 0),
       duration(s.durationMin),
-      `${s.departure} – ${arrival(s)}`,
+      `${s.departure} – ${arrival(s, sum.stageEnergy.get(s.id)?.chargeMinutes)}`,
       hotelOn(s.date)?.name ?? "",
     ]),
   );
@@ -83,7 +83,7 @@ export async function exportRoadbook(tour: Tour, sum: TourSummary) {
     ["Datum", "Unterkunft", "Adresse", "Telefon", "Status", "Buchungsnr."],
     sum.hotels
       .filter((h) => h.status !== "cancelled")
-      .map((h) => [`${date(h.checkIn)} – ${date(h.checkOut)}`, `${h.name}${h.garage ? " (Garage)" : ""}`, h.address, h.phone, HOTEL_STATUS[h.status].label, h.confirmation]),
+      .map((h) => [`${date(h.checkIn)} – ${date(h.checkOut)}`, `${h.name}${h.garage ? " (Garage)" : ""}${h.charging ? " (Laden)" : ""}`, h.address, h.phone, HOTEL_STATUS[h.status].label, h.confirmation]),
   );
 
   for (const s of sum.stages) {

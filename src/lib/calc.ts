@@ -1,4 +1,4 @@
-import type { Expense, ExpenseCategory, Hotel, Member, Stage, Tour } from "./types";
+import type { Drive, Expense, ExpenseCategory, Hotel, Member, Stage, Tour } from "./types";
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
@@ -137,32 +137,67 @@ export function clock(minutes: number) {
   return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 }
 
-/** voraussichtliche Ankunft = Abfahrt + Fahrzeit + Pausen */
-export function arrival(s: Stage) {
-  return clock(toMinutes(s.departure) + s.durationMin + s.pauseMinutes);
+/** voraussichtliche Ankunft = Abfahrt + Fahrzeit + Pausen (+ Zeit an Ladesäulen) */
+export function arrival(s: Stage, extraMinutes = 0) {
+  return clock(toMinutes(s.departure) + s.durationMin + s.pauseMinutes + extraMinutes);
 }
 
-export interface FuelInfo {
-  /** kleinste nutzbare Reichweite in der Gruppe */
+export interface EnergyGroup {
+  drive: Drive;
+  /** kleinste nutzbare Reichweite (mit Reserve) unter den Motorrädern dieses Antriebs */
   rangeKm: number;
   limitedBy: string;
+  /** Stopps unterwegs; gestartet wird mit vollem Tank bzw. Akku */
   stops: number;
-  liters: number;
+  /** ungefähre Kilometer der Stopps ab Etappenstart */
+  stopKm: number[];
+  /** Liter bzw. kWh für alle Motorräder dieses Antriebs zusammen */
+  amount: number;
   cost: number;
 }
 
-export function fuelInfo(km: number, members: Member[], reserve: number, fuelPrice: number): FuelInfo | null {
-  const withRange = members.filter((m) => m.tankRangeKm > 0);
+export interface EnergyInfo {
+  fuel: EnergyGroup | null;
+  electric: EnergyGroup | null;
+  cost: number;
+  /** zusätzliche Standzeit an Ladesäulen (Tanken steckt in den normalen Pausen) */
+  chargeMinutes: number;
+}
+
+function energyGroup(drive: Drive, km: number, members: Member[], reserve: number, price: number): EnergyGroup | null {
+  const group = members.filter((m) => (m.drive ?? "fuel") === drive);
+  const withRange = group.filter((m) => m.tankRangeKm > 0);
   if (!withRange.length || km <= 0) return null;
   const min = withRange.reduce((a, b) => (b.tankRangeKm < a.tankRangeKm ? b : a));
-  const rangeKm = Math.round(min.tankRangeKm * reserve);
-  const liters = members.reduce((sum, m) => sum + (km * (m.consumption || 0)) / 100, 0);
+  const rangeKm = Math.max(1, Math.round(min.tankRangeKm * reserve));
+  const stops = Math.max(0, Math.ceil(km / rangeKm) - 1);
+  const amount = group.reduce((sum, m) => sum + (km * (m.consumption || 0)) / 100, 0);
   return {
+    drive,
     rangeKm,
     limitedBy: min.name,
-    stops: Math.max(0, Math.ceil(km / rangeKm) - 1),
-    liters: Math.round(liters * 10) / 10,
-    cost: round2(liters * fuelPrice),
+    stops,
+    stopKm: Array.from({ length: stops }, (_, i) => (i + 1) * rangeKm),
+    amount: Math.round(amount * 10) / 10,
+    cost: round2(amount * price),
+  };
+}
+
+/**
+ * Tank- und Ladestopps, Verbrauch und Energiekosten für eine Strecke.
+ * Verbrenner und Elektro werden getrennt gerechnet; die Gruppe hält an,
+ * sobald das Motorrad mit der kleinsten Reichweite es braucht.
+ */
+export function energyInfo(km: number, members: Member[], reserve: number, prices: { fuel: number; electricity: number }): EnergyInfo | null {
+  const fuel = energyGroup("fuel", km, members, reserve, prices.fuel);
+  const electric = energyGroup("electric", km, members, reserve, prices.electricity);
+  if (!fuel && !electric) return null;
+  const perStop = Math.max(0, ...members.filter((m) => m.drive === "electric").map((m) => m.chargeMinutes || 0));
+  return {
+    fuel,
+    electric,
+    cost: round2((fuel?.cost ?? 0) + (electric?.cost ?? 0)),
+    chargeMinutes: (electric?.stops ?? 0) * perStop,
   };
 }
 

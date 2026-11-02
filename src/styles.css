@@ -1743,3 +1743,8 @@ tr.derived td {
 .credits .link {
   padding: 0;
 }
+.stop-list {
+  margin-top: 10px;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}

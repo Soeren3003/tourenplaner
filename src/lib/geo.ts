@@ -233,3 +233,21 @@ export function buildGpx(title: string, stages: GpxStage[]) {
   lines.push(`</gpx>`, "");
   return lines.join("\n");
 }
+
+/** Punkte auf einem Linienzug in den angegebenen Abständen (km ab Start). */
+export function pointsAlong(points: LatLon[], distancesKm: number[]): LatLon[] {
+  const out: LatLon[] = [];
+  const targets = distancesKm.slice().sort((a, b) => a - b);
+  let walked = 0;
+  let t = 0;
+  for (let i = 1; i < points.length && t < targets.length; i++) {
+    const seg = haversine(points[i - 1], points[i]);
+    while (t < targets.length && walked + seg >= targets[t]) {
+      const f = seg ? (targets[t] - walked) / seg : 0;
+      out.push({ lat: points[i - 1].lat + (points[i].lat - points[i - 1].lat) * f, lon: points[i - 1].lon + (points[i].lon - points[i - 1].lon) * f });
+      t++;
+    }
+    walked += seg;
+  }
+  return out;
+}

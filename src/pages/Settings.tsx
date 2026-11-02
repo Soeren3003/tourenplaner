@@ -48,13 +48,16 @@ export default function SettingsPage({ tab: initial }: { tab?: string }) {
             <Field label="Spritpreis">
               <NumberInput value={s.defaultFuelPrice} suffix={`${s.defaultCurrency}/l`} onChange={(v) => set({ defaultFuelPrice: v ?? 0 })} />
             </Field>
+            <Field label="Strompreis (Ladesäule)">
+              <NumberInput value={s.defaultElectricityPrice} suffix={`${s.defaultCurrency}/kWh`} onChange={(v) => set({ defaultElectricityPrice: v ?? 0 })} />
+            </Field>
             <Field label="Abfahrtszeit">
               <input type="time" value={s.defaultDeparture} onChange={(e) => set({ defaultDeparture: e.target.value })} />
             </Field>
             <Field label="Pausen pro Tag">
               <NumberInput value={s.defaultPauseMinutes} digits={0} suffix="min" onChange={(v) => set({ defaultPauseMinutes: v ?? 0 })} />
             </Field>
-            <Field label="Tankreserve" hint="Getankt wird, wenn dieser Anteil der Reichweite erreicht ist.">
+            <Field label="Reichweiten-Reserve" hint="Getankt bzw. geladen wird, wenn dieser Anteil der Reichweite erreicht ist.">
               <NumberInput value={Math.round(s.tankReserve * 100)} digits={0} suffix="%" min={30} onChange={(v) => set({ tankReserve: Math.min(1, (v ?? 80) / 100) })} />
             </Field>
             <Field label="Autobahnen">

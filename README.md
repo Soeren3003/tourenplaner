@@ -57,8 +57,10 @@ Die App läuft lokal auf dem eigenen Rechner. Ein Konto oder ein eigener Server 
   - Ortssuche nach Ort, Pass oder Adresse; Ortsnamen werden automatisch ermittelt.
 - km und Fahrzeit für die ganze Etappe und für jedes Teilstück
 - Abfahrtszeit plus Pausen ergibt die voraussichtliche Ankunft
-- **Tankstopps**: Maßgeblich ist die kleinste Reichweite in der Gruppe, abzüglich einer Reserve.
-  Dazu kommen Spritverbrauch und Spritkosten.
+- **Tank- und Ladestopps**: Maßgeblich ist die kleinste Reichweite in der Gruppe, abzüglich einer Reserve.
+  Verbrenner und Elektromotorräder werden getrennt gerechnet (siehe [Elektromotorräder](#elektromotorräder)).
+  Die Stopps erscheinen als Marker auf der Route, mit Link zur Suche nach Tankstellen bzw. Ladesäulen in der Nähe.
+  Dazu kommen Verbrauch (Liter bzw. kWh) und Energiekosten.
 - **Wettervorhersage** am Etappenziel, ab 16 Tagen vor der Etappe
 - **GPX-Import**, z. B. kurvige Routen aus Kurviger oder Calimoto oder aufgezeichnete Tracks
 - **GPX-Export** für Garmin, TomTom, Calimoto & Co., als Route und Track
@@ -69,26 +71,49 @@ Die App läuft lokal auf dem eigenen Rechner. Ein Konto oder ein eigener Server 
 ### Unterkünfte
 - Lage auf der Karte, Zeitraum, Status (Idee, Angefragt, Gebucht, Storniert)
 - Preis für die Gruppe mit Anzeige pro Person und Nacht, wer bezahlt hat, auf wen der Preis verteilt wird
-- Garage bzw. sicherer Stellplatz fürs Motorrad, Frühstück, Telefon, Buchungsnummer, Link
+- Garage bzw. sicherer Stellplatz fürs Motorrad, Lademöglichkeit fürs E-Motorrad, Frühstück, Telefon, Buchungsnummer, Link
 - Hinweis auf Nächte, für die noch keine Unterkunft eingetragen ist
 
 ### Kosten teilen
-- Ausgaben mit Kategorie (Sprit, Essen, Maut, Fähre …), Datum und Zahler
+- Ausgaben mit Kategorie (Sprit, Laden, Essen, Maut, Fähre …), Datum und Zahler
 - **Fremdwährungen** mit Umrechnungskurs (CHF, NOK, GBP …)
 - Aufteilung auf alle Mitfahrer oder nur auf einzelne
 - Unterkünfte fließen automatisch in die Abrechnung ein.
 - Salden je Person und **„Wer zahlt wem?“** mit möglichst wenigen Überweisungen, als Text kopierbar (z. B. für WhatsApp)
-- Kosten nach Kategorie; Spritschätzung, solange noch keine Tankbelege erfasst sind
+- Kosten nach Kategorie; Schätzung für Sprit und Strom, solange noch keine Tank- bzw. Ladebelege erfasst sind
 
 ### Und außerdem
 - **Checkliste** je Tour aus einer anpassbaren Vorlage (Papiere, Vignetten, Technik, Ausrüstung), jeder Punkt mit Zuständigkeit
 - **Dokumente** je Tour per Drag & Drop (Buchungsbestätigungen, Tickets, GPX, Fotos); sie werden mitsynchronisiert
 - **Roadbook als PDF** mit Tagesplan, Unterkünften, Wegpunkten, Kontakten und Abrechnung
-- **Mitfahrer** mit Motorrad, Tankreichweite, Verbrauch, Telefon und Notfallkontakt
+- **Mitfahrer** mit Motorrad, Antrieb (Verbrenner oder Elektro), Reichweite, Verbrauch, Telefon und Notfallkontakt
 - **Übersicht** mit Countdown zur nächsten Tour und offenen Punkten
 - **Statistik** über alle Touren: km pro Jahr, Ø km pro Tag, Ø km/h, längster Tag,
   Kosten pro Person und pro km, km je Mitfahrer
+- **Informationsfenster** „Über Tourenplaner“ mit Version, Autor, Lizenz und Entstehung (unten in der Seitenleiste)
 - Hell- und Dunkelmodus folgen der Systemeinstellung.
+
+### Elektromotorräder
+
+Bei jedem Mitfahrer lässt sich der Antrieb wählen: **Verbrenner** oder **Elektro**.
+
+| | Verbrenner | Elektro |
+| --- | --- | --- |
+| Verbrauch | l/100 km | kWh/100 km |
+| Reichweite | je Tankfüllung | je Akkuladung |
+| Preis (je Tour) | Spritpreis je Liter | Strompreis je kWh an der Ladesäule |
+| Zusätzliche Zeit | steckt in den normalen Pausen | Dauer eines Ladestopps je Mitfahrer, wird zur Ankunftszeit addiert |
+
+So wird gerechnet:
+
+- Für jeden Antrieb zählt die **kleinste Reichweite** der Motorräder mit diesem Antrieb, abzüglich der Reserve
+  (*Einstellungen → Planung → Reichweiten-Reserve*, Standard 80 %). Fährt ein E-Motorrad mit, bestimmt es
+  meist den Takt der Gruppe.
+- Jede Etappe beginnt mit vollem Tank bzw. Akku, denn über Nacht wird im Hotel geladen. Fehlt bei der
+  Unterkunft des Abends die Lademöglichkeit, weist der Etappenplaner darauf hin.
+- Die Ladezeit kommt einmal pro Ladestopp dazu. Es zählt der längste Ladestopp in der Gruppe, weil alle warten.
+- Verbrauch und Kosten werden je Antrieb geschätzt und in den Kosten pro Person berücksichtigt. Sobald Ausgaben
+  der Kategorie „Sprit“ bzw. „Laden“ erfasst sind, ersetzen sie die jeweilige Schätzung.
 
 ## Installation
 
@@ -116,7 +141,7 @@ Siehe [Entwicklung](#entwicklung) und [Bauen und Veröffentlichen](#bauen-und-ve
 
 ## Erste Schritte
 
-1. Unter **Mitfahrer** die Gruppe anlegen, mit Motorrad, Tankreichweite und Verbrauch.
+1. Unter **Mitfahrer** die Gruppe anlegen, mit Motorrad, Antrieb, Reichweite und Verbrauch.
    Bei dir selbst auf **„Das bin ich“** klicken. Diese Einstellung gilt nur auf dem eigenen Rechner;
    du wirst dann als Zahler vorausgewählt.
 2. Mit **+ Neue Tour** eine Tour anlegen und im Tab *Überblick* Zeitraum, Region und Mitfahrer eintragen.
@@ -219,7 +244,7 @@ npm run dev            # nur die Oberfläche im Browser (http://localhost:1420),
 **Tests**
 
 ```bash
-npm test                         # Kostenaufteilung, Tankstopps, Polyline, GPX
+npm test                         # Kostenaufteilung, Tank- und Ladestopps, Polyline, GPX
 cd src-tauri && cargo test       # WebDAV-URLs, XML-Parser, Host-Freigabe
 ```
 
@@ -237,13 +262,13 @@ cd src-tauri && TOURENPLANER_TEST_DAV=http://127.0.0.1:8765 cargo test --test sy
 ```
 ├── src/                      Oberfläche (React + TypeScript)
 │   ├── App.tsx               Navigation und Seitenaufbau
-│   ├── components/           Karte (Leaflet), Diagramme, Wetter, Eingabefelder
+│   ├── components/           Karte (Leaflet), Diagramme, Wetter, Eingabefelder, Info-Fenster
 │   ├── pages/                Übersicht, Touren, Mitfahrer, Statistik, Einstellungen
 │   │   └── tour/             Tabs einer Tour: Überblick, Etappen, Unterkünfte, Kosten, Checkliste, Dokumente
 │   ├── lib/
 │   │   ├── types.ts          Datenmodell
 │   │   ├── store.tsx         Laden, verzögertes Speichern, Sync-Auslösung
-│   │   ├── calc.ts           Kostenaufteilung, Salden, Überweisungen, Tankstopps, Statistik
+│   │   ├── calc.ts           Kostenaufteilung, Salden, Überweisungen, Tank- und Ladestopps, Statistik
 │   │   ├── geo.ts            Entfernungen, Polyline, Einfügeposition, GPX lesen/schreiben
 │   │   ├── services.ts       Routing, Ortssuche, Wetter
 │   │   ├── export.ts         GPX-Export und Roadbook-PDF

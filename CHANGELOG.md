@@ -8,6 +8,33 @@ Die Versionsnummern folgen der [semantischen Versionierung](https://semver.org/l
 - **MINOR** steigt bei neuen Funktionen, die bestehende Daten weiter lesen können.
 - **PATCH** steigt bei Fehlerbehebungen und kleinen Verbesserungen ohne neue Funktion.
 
+## [1.2.0] – 2026-11-02
+
+### Neu
+- **Elektromotorräder**
+  - Bei jedem Mitfahrer lässt sich der Antrieb wählen: Verbrenner oder Elektro.
+  - Bei Elektro: Verbrauch in kWh/100 km, Reichweite je Akkuladung und Dauer eines Ladestopps.
+  - Beim Umschalten werden typische Werte vorgeschlagen (Elektro: 180 km, 9 kWh/100 km).
+- **Ladestopps im Etappenplaner**, getrennt von den Tankstopps berechnet nach der kleinsten Reichweite
+  der E-Motorräder (mit Reserve)
+  - Ladezeit wird auf die voraussichtliche Ankunft aufgeschlagen, auch im Tagesplan und im Roadbook.
+  - Anzeige „⚡ n× laden (+Zeit)“ in der Streckenleiste, Karte „Tanken & Laden“ mit Reichweite,
+    Stopps, Ladezeit und Verbrauch in kWh
+- **Tank- und Ladestopps auf der Karte**: Marker an der ungefähren Stelle der Route, mit Liste und Link
+  „Tankstellen suchen“ bzw. „Ladesäulen suchen“ in der Nähe
+- **Strompreis je Tour** (je kWh an der Ladesäule, in der Tourwährung) und Vorgabe in den Einstellungen (Standard 0,59 €/kWh)
+- Energiekosten: Sprit- und Stromkosten werden getrennt geschätzt und in die Kosten pro Person eingerechnet.
+- Neue Ausgabenkategorie **„Laden (Strom)“**; sobald sie erfasst ist, ersetzt sie die Stromschätzung.
+- Unterkünfte: Option **„Lademöglichkeit fürs E-Motorrad“**. Der Etappenplaner warnt, wenn sie am Abend fehlt.
+
+### Geändert
+- „Tankreserve“ heißt jetzt „Reichweiten-Reserve“ und gilt für Tank und Akku.
+- Zusammenfassung im Tour-Überblick zeigt Tank- und Ladestopps der ganzen Tour.
+
+### Kompatibilität
+- Bestehende Daten werden ohne Umwandlung weiter gelesen: Mitfahrer ohne Antrieb gelten als Verbrenner,
+  Touren ohne Strompreis übernehmen die Vorgabe aus den Einstellungen.
+
 ## [1.1.0] – 2026-11-02
 
 ### Neu
@@ -40,5 +67,6 @@ Erste veröffentlichte Version.
 - Abgleich mit Nextcloud bzw. WebDAV
 - MIT-Lizenz
 
+[1.2.0]: ../../releases/tag/v1.2.0
 [1.1.0]: ../../releases/tag/v1.1.0
 [1.0.0]: ../../releases/tag/v1.0.0

@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from "vitest";
-import { balances, costItems, fuelInfo, settle } from "./calc";
-import { newExpense, newHotel, newMember, newTour, defaultSettings } from "./defaults";
+import { arrival, balances, costItems, energyInfo, settle } from "./calc";
+import { newExpense, newHotel, newMember, newStage, newTour, defaultSettings, migrateMember } from "./defaults";
 import { bestInsertIndex, buildGpx, decodePolyline, encodePolyline, parseGpx } from "./geo";
 
 const s = defaultSettings();
@@ -42,14 +42,48 @@ describe("Kostenaufteilung", () => {
   });
 });
 
-describe("Sprit", () => {
+describe("Tanken und Laden", () => {
+  const prices = { fuel: 2, electricity: 0.5 };
+
   it("nutzt die kleinste Reichweite der Gruppe", () => {
     const { a, b } = setup();
-    const f = fuelInfo(500, [{ ...a, tankRangeKm: 400 }, { ...b, tankRangeKm: 250, consumption: 6 }], 0.8, 2)!;
+    const e = energyInfo(500, [{ ...a, tankRangeKm: 400 }, { ...b, tankRangeKm: 250, consumption: 6 }], 0.8, prices)!;
+    const f = e.fuel!;
     expect(f.rangeKm).toBe(200);
     expect(f.limitedBy).toBe("B");
     expect(f.stops).toBe(2);
-    expect(f.liters).toBe(55);
+    expect(f.stopKm).toEqual([200, 400]);
+    expect(f.amount).toBe(55);
+    expect(f.cost).toBe(110);
+    expect(e.electric).toBeNull();
+    expect(e.chargeMinutes).toBe(0);
+  });
+
+  it("rechnet Elektromotorräder getrennt in kWh mit Ladezeit", () => {
+    const { a, b, c } = setup();
+    const ebike = { ...c, drive: "electric" as const, tankRangeKm: 150, consumption: 10, chargeMinutes: 40 };
+    const e = energyInfo(300, [{ ...a, tankRangeKm: 400 }, { ...b, tankRangeKm: 350 }, ebike], 0.8, prices)!;
+    expect(e.fuel!.stops).toBe(1);
+    expect(e.fuel!.amount).toBe(30);
+    // 150 km × 0,8 = 120 km nutzbar → Stopps bei km 120 und 240
+    expect(e.electric!.rangeKm).toBe(120);
+    expect(e.electric!.stops).toBe(2);
+    expect(e.electric!.amount).toBe(30);
+    expect(e.electric!.cost).toBe(15);
+    expect(e.cost).toBe(75);
+    expect(e.chargeMinutes).toBe(80);
+  });
+
+  it("verschiebt die Ankunft um die Ladezeit", () => {
+    const st = { ...newStage(s, "t", "2026-06-01"), departure: "09:00", durationMin: 300, pauseMinutes: 60 };
+    expect(arrival(st)).toBe("15:00");
+    expect(arrival(st, 80)).toBe("16:20");
+  });
+
+  it("alte Mitfahrer ohne Antrieb gelten als Verbrenner", () => {
+    const { a } = setup();
+    const { drive: _d, chargeMinutes: _c, ...old } = a;
+    expect(migrateMember(old).drive).toBe("fuel");
   });
 });
 
