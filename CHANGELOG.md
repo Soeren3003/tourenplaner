@@ -8,6 +8,20 @@ Die Versionsnummern folgen der [semantischen Versionierung](https://semver.org/l
 - **MINOR** steigt bei neuen Funktionen, die bestehende Daten weiter lesen können.
 - **PATCH** steigt bei Fehlerbehebungen und kleinen Verbesserungen ohne neue Funktion.
 
+## [1.1.0] – 2026-11-02
+
+### Neu
+- **Informationsfenster „Über Tourenplaner“**, erreichbar unten in der Seitenleiste. Es zeigt:
+  - Version und Autor (Soeren3003)
+  - die Entstehung in Zusammenarbeit mit der KI Claude
+  - die MIT-Lizenz in Kurzform und auf Wunsch den vollständigen Lizenztext
+  - die verwendeten Bibliotheken, Kartendaten und Online-Dienste mit Links
+- Die aktuelle Versionsnummer steht in der Seitenleiste.
+
+### Geändert
+- Als Autor und Rechteinhaber steht jetzt durchgängig „Soeren3003“
+  (LICENSE, package.json, Cargo.toml, Copyright-Vermerk der App).
+
 ## [1.0.0] – 2026-11-02
 
 Erste veröffentlichte Version.
@@ -26,4 +40,5 @@ Erste veröffentlichte Version.
 - Abgleich mit Nextcloud bzw. WebDAV
 - MIT-Lizenz
 
+[1.1.0]: ../../releases/tag/v1.1.0
 [1.0.0]: ../../releases/tag/v1.0.0

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AboutDialog, APP_VERSION } from "./components/About";
 import { useStore } from "./lib/store";
 import { newTour } from "./lib/defaults";
 import { dateTime } from "./lib/format";
@@ -32,6 +33,7 @@ const NAV: { page: View["page"]; label: string; icon: string }[] = [
 export default function App() {
   const store = useStore();
   const [view, setView] = useState<View>({ page: "dashboard" });
+  const [about, setAbout] = useState(false);
 
   if (!store.ready) return <div className="loading">Lade Daten …</div>;
 
@@ -81,8 +83,12 @@ export default function App() {
               Nextcloud-Sync einrichten
             </button>
           )}
+          <button className="link small about-link" onClick={() => setAbout(true)}>
+            ⓘ Über Tourenplaner · v{APP_VERSION}
+          </button>
         </div>
       </aside>
+      {about && <AboutDialog onClose={() => setAbout(false)} />}
       <main className={`content ${view.page === "tour" ? "wide" : ""}`}>
         {store.saveError && (
           <div className="alert error banner">

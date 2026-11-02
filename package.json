@@ -1,7 +1,7 @@
 {
   "name": "tourenplaner",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Motorradtouren in der Gruppe planen: Etappen, Unterkünfte, Kosten und Statistik",
   "license": "MIT",
   "author": "Soeren3003",
