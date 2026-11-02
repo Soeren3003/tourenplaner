@@ -43,6 +43,21 @@ describe("Kostenaufteilung", () => {
   });
 });
 
+describe("Rundung", () => {
+  it("Salden ergeben genau null und Überweisungen gleichen sie exakt aus", () => {
+    const { a, b, c, tour } = setup();
+    // 100 € auf drei Personen: 33,333… je Person
+    const items = costItems(tour, [{ ...newExpense(tour, a.id, tour.startDate), amount: 100 }, { ...newExpense(tour, b.id, tour.startDate), amount: 10.01 }], []);
+    const bal = balances(tour.memberIds, items);
+    expect(Math.round(bal.reduce((x, y) => x + y.balance, 0) * 100)).toBe(0);
+    const tr = settle(bal);
+    for (const m of [a, b, c]) {
+      const got = tr.filter((t) => t.to === m.id).reduce((x, t) => x + t.amount, 0) - tr.filter((t) => t.from === m.id).reduce((x, t) => x + t.amount, 0);
+      expect(Math.round(got * 100)).toBe(Math.round(bal.find((x) => x.memberId === m.id)!.balance * 100));
+    }
+  });
+});
+
 describe("Tanken und Laden", () => {
   const prices = { fuel: 2, electricity: 0.5 };
 

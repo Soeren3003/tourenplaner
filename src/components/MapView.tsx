@@ -28,30 +28,23 @@ export interface MapMarker {
   onContextMenu?: () => void;
 }
 
+// Nur Kartendienste, deren Bedingungen die Nutzung in einer freien Desktop-App erlauben
+// (Quellenangabe sichtbar, eigener User-Agent, kein Massen-Download, kein Offline-Vorabladen).
+const OSM_ATTRIBUTION =
+  'Daten © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende (ODbL) · <a href="https://www.openstreetmap.org/fixthemap">Fehler melden</a>';
+
 const LAYERS: Record<string, { name: string; url: string; attribution: string; maxZoom: number }> = {
   osm: {
     name: "OpenStreetMap",
     url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    maxZoom: 19,
-  },
-  street: {
-    name: "Esri Straßenkarte",
-    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
-    attribution: "Tiles &copy; Esri",
+    attribution: OSM_ATTRIBUTION,
     maxZoom: 19,
   },
   topo: {
-    name: "Topografisch",
+    name: "Topografisch (OpenTopoMap)",
     url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, SRTM | &copy; <a href="https://opentopomap.org">OpenTopoMap</a>',
+    attribution: `${OSM_ATTRIBUTION}, SRTM · Kartendarstellung © <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)`,
     maxZoom: 17,
-  },
-  satellite: {
-    name: "Satellit",
-    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-    attribution: "Tiles &copy; Esri",
-    maxZoom: 19,
   },
 };
 
@@ -104,12 +97,12 @@ export default function MapView({
     const base: Record<string, L.TileLayer> = {};
     for (const l of Object.values(LAYERS)) base[l.name] = L.tileLayer(l.url, { attribution: l.attribution, maxZoom: l.maxZoom, detectRetina: false });
     base[LAYERS[storedLayer()].name].addTo(m);
-    // Blockiert der OSM-Server die App (fehlender Referer), auf Esri ausweichen.
+    // Ist der OSM-Server nicht erreichbar oder lehnt ab, auf OpenTopoMap ausweichen.
     let osmErrors = 0;
     base[LAYERS.osm.name].on("tileerror", () => {
       if (++osmErrors === 4 && m.hasLayer(base[LAYERS.osm.name])) {
         m.removeLayer(base[LAYERS.osm.name]);
-        base[LAYERS.street.name].addTo(m);
+        base[LAYERS.topo.name].addTo(m);
       }
     });
     L.control.layers(base, undefined, { position: "topright" }).addTo(m);

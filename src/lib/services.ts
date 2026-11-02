@@ -1,16 +1,29 @@
 /**
  * Freie Online-Dienste ohne API-Schlüssel:
  * - Routing: Valhalla (FOSSGIS-Server) mit Motorrad-Profil
- * - Ortssuche: Nominatim (OpenStreetMap)
- * - Wetter: Open-Meteo (bis 16 Tage im Voraus)
+ * - Ortssuche: Nominatim (OpenStreetMap) – nur auf Knopfdruck, keine Autovervollständigung
+ * - Wetter: Open-Meteo (bis 16 Tage im Voraus, kostenlos nur nicht-kommerziell)
+ *
+ * Die Adressen sind in den Einstellungen änderbar; das Rust-Backend sendet einen eigenen
+ * User-Agent, hält höchstens eine Anfrage pro Sekunde je Dienst ein und speichert Suchergebnisse zwischen.
  */
 import { api } from "./api";
 import { decodePolyline, encodePolyline, simplify } from "./geo";
-import type { LatLon, RouteOptions } from "./types";
+import { DEFAULT_SERVICES } from "./defaults";
+import type { LatLon, RouteOptions, ServiceSettings } from "./types";
 
-const VALHALLA = "https://valhalla1.openstreetmap.de/route";
-const NOMINATIM = "https://nominatim.openstreetmap.org";
 const METEO = "https://api.open-meteo.com/v1/forecast";
+
+let cfg: ServiceSettings = { ...DEFAULT_SERVICES };
+const base = (u: string) => u.trim().replace(/\/+$/, "");
+
+/** Wird beim Laden und Ändern der Einstellungen aufgerufen. */
+export function configureServices(s: ServiceSettings) {
+  cfg = s;
+}
+
+export const geocodingEnabled = () => cfg.geocoding;
+export const weatherEnabled = () => cfg.weather;
 
 export interface RouteResult {
   geometry: string;
@@ -36,7 +49,7 @@ export async function routeMotorcycle(points: LatLon[], o: RouteOptions): Promis
     units: "kilometers",
     directions_type: "none",
   };
-  const res = JSON.parse(await api.webRequest(VALHALLA, body));
+  const res = JSON.parse(await api.webRequest(`${base(cfg.routingUrl)}/route`, body));
   const trip = res.trip;
   if (!trip) throw new Error(res.error ?? "Keine Route gefunden.");
   const shape = trip.legs.flatMap((l: { shape: string }, i: number) => {
@@ -64,7 +77,8 @@ function shortName(r: { name?: string; display_name: string; address?: Record<st
 }
 
 export async function searchPlaces(q: string): Promise<Place[]> {
-  const url = `${NOMINATIM}/search?format=jsonv2&addressdetails=1&limit=8&accept-language=de&q=${encodeURIComponent(q)}`;
+  if (!cfg.geocoding) throw new Error("Die Ortssuche ist in den Einstellungen ausgeschaltet.");
+  const url = `${base(cfg.geocodingUrl)}/search?format=jsonv2&addressdetails=1&limit=8&accept-language=de&q=${encodeURIComponent(q)}`;
   const list = JSON.parse(await api.webRequest(url));
   return list.map((r: { lat: string; lon: string; display_name: string; name?: string; address?: Record<string, string> }) => ({
     lat: Number(r.lat),
@@ -75,8 +89,9 @@ export async function searchPlaces(q: string): Promise<Place[]> {
 }
 
 export async function reverseGeocode(p: LatLon): Promise<string> {
+  if (!cfg.geocoding) return "";
   try {
-    const url = `${NOMINATIM}/reverse?format=jsonv2&addressdetails=1&zoom=14&accept-language=de&lat=${p.lat}&lon=${p.lon}`;
+    const url = `${base(cfg.geocodingUrl)}/reverse?format=jsonv2&addressdetails=1&zoom=14&accept-language=de&lat=${p.lat}&lon=${p.lon}`;
     const r = JSON.parse(await api.webRequest(url));
     return r.display_name ? shortName(r) : "";
   } catch {
@@ -96,6 +111,7 @@ export interface DayWeather {
 
 /** Tageswetter für einen Ort; null, wenn das Datum außerhalb der Vorhersage liegt. */
 export async function weatherFor(p: LatLon, date: string): Promise<DayWeather | null> {
+  if (!cfg.weather) return null;
   const days = (new Date(`${date}T12:00:00`).getTime() - Date.now()) / 86_400_000;
   if (days < -1 || days > 15) return null;
   const url =

@@ -82,7 +82,18 @@ export function balances(memberIds: string[], items: CostItem[]): Balance[] {
       if (payer) payer.paid += it.amount;
     }
   }
-  return [...map.values()].map((b) => ({ ...b, paid: round2(b.paid), share: round2(b.share), balance: round2(b.paid - b.share) }));
+  // Salden in ganzen Cent, so verteilt, dass sie genau null ergeben (sonst fehlt bei den Überweisungen ein Cent).
+  const list = [...map.values()];
+  const raw = list.map((b) => (b.paid - b.share) * 100);
+  const cents = raw.map(Math.round);
+  let rest = -cents.reduce((a, c) => a + c, 0);
+  const order = raw.map((_, i) => i).sort((x, y) => (raw[y] - cents[y]) * Math.sign(rest) - (raw[x] - cents[x]) * Math.sign(rest));
+  for (const i of order) {
+    if (!rest) break;
+    cents[i] += Math.sign(rest);
+    rest -= Math.sign(rest);
+  }
+  return list.map((b, i) => ({ ...b, paid: round2(b.paid), share: round2(b.share), balance: cents[i] / 100 }));
 }
 
 export interface Transfer {
@@ -93,8 +104,9 @@ export interface Transfer {
 
 /** Möglichst wenige Überweisungen: größter Schuldner zahlt an größten Gläubiger. */
 export function settle(bal: Balance[]): Transfer[] {
-  const debtors = bal.filter((b) => b.balance < -0.005).map((b) => ({ id: b.memberId, v: -b.balance }));
-  const creditors = bal.filter((b) => b.balance > 0.005).map((b) => ({ id: b.memberId, v: b.balance }));
+  // in ganzen Cent rechnen, damit keine Rundungsreste entstehen
+  const debtors = bal.filter((b) => b.balance < 0).map((b) => ({ id: b.memberId, v: Math.round(-b.balance * 100) }));
+  const creditors = bal.filter((b) => b.balance > 0).map((b) => ({ id: b.memberId, v: Math.round(b.balance * 100) }));
   const out: Transfer[] = [];
   debtors.sort((a, b) => b.v - a.v);
   creditors.sort((a, b) => b.v - a.v);
@@ -102,11 +114,11 @@ export function settle(bal: Balance[]): Transfer[] {
   let j = 0;
   while (i < debtors.length && j < creditors.length) {
     const amount = Math.min(debtors[i].v, creditors[j].v);
-    if (amount >= 0.01) out.push({ from: debtors[i].id, to: creditors[j].id, amount: round2(amount) });
+    if (amount > 0) out.push({ from: debtors[i].id, to: creditors[j].id, amount: amount / 100 });
     debtors[i].v -= amount;
     creditors[j].v -= amount;
-    if (debtors[i].v < 0.005) i++;
-    if (creditors[j].v < 0.005) j++;
+    if (debtors[i].v <= 0) i++;
+    if (creditors[j].v <= 0) j++;
   }
   return out;
 }

@@ -9,7 +9,7 @@ import { addDays, newStage, uid } from "../../lib/defaults";
 import { dayNo, exportGpx } from "../../lib/export";
 import { date, duration, num } from "../../lib/format";
 import { bestInsertIndex, decodePolyline, encodePolyline, parseGpx, pathLength, pointsAlong, simplify } from "../../lib/geo";
-import { reverseGeocode, routeMotorcycle, searchPlaces, type Place } from "../../lib/services";
+import { geocodingEnabled, reverseGeocode, routeMotorcycle, searchPlaces, weatherEnabled, type Place } from "../../lib/services";
 import { useStore } from "../../lib/store";
 import type { TourSummary } from "../../lib/summary";
 import type { LatLon, RouteOptions, Stage, Tour, Waypoint } from "../../lib/types";
@@ -451,8 +451,17 @@ function StageEditor({ tour, sum, stage, onNext, onDeleted }: { tour: Tour; sum:
 
           <section className="card">
             <h2>Wetter am Ziel</h2>
-            {stageEnd(stage) ? <Weather pos={stageEnd(stage)} date={stage.date} full /> : null}
-            <p className="muted small">Vorhersage erscheint ab 16 Tage vor der Etappe (Open-Meteo).</p>
+            {weatherEnabled() ? (
+              <>
+                {stageEnd(stage) ? <Weather pos={stageEnd(stage)} date={stage.date} full /> : null}
+                <p className="muted small">
+                  Vorhersage erscheint ab 16 Tage vor der Etappe. Wetterdaten:{" "}
+                  <a href="https://open-meteo.com/">Open-Meteo.com</a> (CC BY 4.0)
+                </p>
+              </>
+            ) : (
+              <p className="muted small">Die Wettervorhersage ist in den Einstellungen ausgeschaltet.</p>
+            )}
           </section>
 
           {energy && (
@@ -542,6 +551,8 @@ export function PlaceSearch({ onPick, placeholder = "Ort, Pass oder Adresse such
   const [res, setRes] = useState<Place[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+
+  if (!geocodingEnabled()) return <p className="muted small">Die Ortssuche ist in den Einstellungen ausgeschaltet – Punkte direkt auf der Karte setzen.</p>;
 
   const search = async () => {
     if (!q.trim()) return;

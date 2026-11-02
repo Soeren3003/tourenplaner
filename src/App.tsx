@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AboutDialog, APP_VERSION } from "./components/About";
+import { inTauri } from "./lib/api";
 import { useStore } from "./lib/store";
 import { newTour } from "./lib/defaults";
 import { dateTime } from "./lib/format";
@@ -22,6 +23,16 @@ export type View =
 
 export type Nav = (v: View) => void;
 
+/** Browser-Vorschau: Startansicht per URL, z. B. ?tour=demo-tour&tab=stages&stage=s2 (für Screenshots) */
+function initialView(): View {
+  if (inTauri) return { page: "dashboard" };
+  const p = new URLSearchParams(location.search);
+  const tour = p.get("tour");
+  if (tour) return { page: "tour", id: tour, tab: (p.get("tab") as TourTab) || undefined, stageId: p.get("stage") || undefined };
+  const page = p.get("page") as View["page"] | null;
+  return page && ["dashboard", "tours", "members", "stats", "settings"].includes(page) ? ({ page } as View) : { page: "dashboard" };
+}
+
 const NAV: { page: View["page"]; label: string; icon: string }[] = [
   { page: "dashboard", label: "Übersicht", icon: "◧" },
   { page: "tours", label: "Touren", icon: "⛰" },
@@ -32,7 +43,7 @@ const NAV: { page: View["page"]; label: string; icon: string }[] = [
 
 export default function App() {
   const store = useStore();
-  const [view, setView] = useState<View>({ page: "dashboard" });
+  const [view, setView] = useState<View>(initialView);
   const [about, setAbout] = useState(false);
 
   if (!store.ready) return <div className="loading">Lade Daten …</div>;

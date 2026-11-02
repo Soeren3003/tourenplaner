@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api, type Collection } from "./api";
+import { configureServices } from "./services";
 import { defaultSettings, migrateMember, migrateSettings, migrateTour, now } from "./defaults";
 import type { Expense, Hotel, LocalConfig, Member, Settings, Stage, SyncReport, Tour } from "./types";
 
@@ -115,6 +116,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const [s, ...lists] = await Promise.all([api.dbList<Settings>("settings"), ...LISTS.map((c) => api.dbList<Entity>(c))]);
     const stored = s.find((x) => x.id === "settings");
     const cur = stored ? migrateSettings(stored) : defaultSettings();
+    configureServices(cur.services);
     setSettings(cur);
     if (!stored) await api.dbPut("settings", cur.id, cur);
     const next = { ...EMPTY } as Record<ListCollection, Entity[]>;
@@ -190,6 +192,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setConfig,
       saveSettings: (s) => {
         const v = { ...s, updatedAt: now() };
+        configureServices(v.services);
         setSettings(v);
         schedule("settings", v);
       },

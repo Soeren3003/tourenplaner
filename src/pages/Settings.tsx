@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { Field, NumberInput } from "../components/ui";
 import { api, inTauri, pickFolder } from "../lib/api";
-import { CURRENCIES, DEFAULT_CHECKLIST } from "../lib/defaults";
+import { CURRENCIES, DEFAULT_CHECKLIST, DEFAULT_SERVICES } from "../lib/defaults";
 import { dateTime } from "../lib/format";
 import { useStore } from "../lib/store";
-import type { LocalConfig, Settings } from "../lib/types";
+import type { LocalConfig, ServiceSettings, Settings } from "../lib/types";
 
 const TABS = [
   ["allgemein", "Planung"],
   ["checkliste", "Checklisten-Vorlage"],
+  ["dienste", "Online-Dienste"],
   ["sync", "Daten & Sync"],
 ] as const;
 
@@ -78,8 +79,8 @@ export default function SettingsPage({ tab: initial }: { tab?: string }) {
             </label>
           </div>
           <p className="muted small">
-            Routing: Valhalla (FOSSGIS) mit Motorrad-Profil · Ortssuche: Nominatim · Wetter: Open-Meteo · Karten: OpenStreetMap, CARTO, OpenTopoMap, Esri. Alle
-            Dienste sind kostenlos und brauchen keinen Schlüssel – für sehr kurvige Routen eine Strecke in Kurviger oder Calimoto planen und als GPX importieren.
+            Routing mit Motorrad-Profil über Valhalla (Server und Bedingungen unter „Online-Dienste“). Für sehr kurvige Routen eine Strecke in
+            Kurviger oder Calimoto planen und als GPX importieren.
           </p>
         </section>
       )}
@@ -95,8 +96,71 @@ export default function SettingsPage({ tab: initial }: { tab?: string }) {
         </section>
       )}
 
+      {tab === "dienste" && <ServiceSettingsCard />}
       {tab === "sync" && <SyncSettings />}
     </div>
+  );
+}
+
+function ExtLink({ href, children }: { href: string; children: string }) {
+  return <a href={href}>{children}</a>;
+}
+
+/** Online-Dienste: an-/abschalten und eigene Server eintragen. Gilt für die ganze Gruppe (wird synchronisiert). */
+function ServiceSettingsCard() {
+  const store = useStore();
+  const sv = store.settings.services;
+  const set = (patch: Partial<ServiceSettings>) => store.saveSettings({ ...store.settings, services: { ...sv, ...patch } });
+  const https = (u: string) => /^https:\/\/[^/]+/.test(u.trim());
+  return (
+    <section className="card narrow">
+      <h2>Online-Dienste</h2>
+      <p className="muted small">
+        Die App nutzt freie, ehrenamtlich oder gemeinnützig betriebene Dienste. Ihre Nutzungsbedingungen gelten zusätzlich zur MIT-Lizenz der App.
+        Diese Einstellungen werden mit der Gruppe synchronisiert.
+      </p>
+
+      <h3>Routing (Valhalla)</h3>
+      <Field label="Server" hint="Standard: FOSSGIS e. V. – höchstens 1 Anfrage pro Sekunde, gewerbliche Nutzung nur eingeschränkt erlaubt.">
+        <input value={sv.routingUrl} className={https(sv.routingUrl) ? "" : "invalid"} onChange={(e) => set({ routingUrl: e.target.value })} />
+      </Field>
+      <p className="small">
+        <ExtLink href="https://www.fossgis.de/arbeitsgruppen/osm-server/nutzungsbedingungen/">Nutzungsbedingungen FOSSGIS</ExtLink>
+      </p>
+
+      <h3>Ortssuche (Nominatim)</h3>
+      <label className="check">
+        <input type="checkbox" checked={sv.geocoding} onChange={(e) => set({ geocoding: e.target.checked })} />
+        Ortssuche und automatische Ortsnamen verwenden
+      </label>
+      <Field label="Server" hint="Standard: OpenStreetMap Foundation – höchstens 1 Anfrage pro Sekunde für alle Nutzer der App zusammen, keine Autovervollständigung.">
+        <input value={sv.geocodingUrl} className={https(sv.geocodingUrl) ? "" : "invalid"} disabled={!sv.geocoding} onChange={(e) => set({ geocodingUrl: e.target.value })} />
+      </Field>
+      <p className="small">
+        <ExtLink href="https://operations.osmfoundation.org/policies/nominatim/">Nutzungsrichtlinie Nominatim</ExtLink>
+      </p>
+
+      <h3>Wetter (Open-Meteo)</h3>
+      <label className="check">
+        <input type="checkbox" checked={sv.weather} onChange={(e) => set({ weather: e.target.checked })} />
+        Wettervorhersage anzeigen
+      </label>
+      <p className="muted small">
+        Die kostenlose Open-Meteo-Schnittstelle ist nur für <strong>nicht-kommerzielle</strong> Nutzung erlaubt (z. B. private Touren).
+        Bei gewerblicher Nutzung bitte ausschalten oder ein Abo bei Open-Meteo abschließen. Daten unter CC BY 4.0.{" "}
+        <ExtLink href="https://open-meteo.com/en/terms">Nutzungsbedingungen</ExtLink>
+      </p>
+
+      <h3>Karten</h3>
+      <p className="muted small">
+        Kartenkacheln von OpenStreetMap und OpenTopoMap (umschaltbar in der Karte). Quellenangabe und „Fehler melden“ stehen unten rechts in der
+        Karte. <ExtLink href="https://operations.osmfoundation.org/policies/tiles/">Nutzungsrichtlinie OSM-Kacheln</ExtLink>
+      </p>
+
+      <button className="link small" onClick={() => set({ ...DEFAULT_SERVICES })}>
+        Auf Standard zurücksetzen
+      </button>
+    </section>
   );
 }
 

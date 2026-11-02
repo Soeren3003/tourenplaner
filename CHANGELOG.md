@@ -8,6 +8,37 @@ Die Versionsnummern folgen der [semantischen Versionierung](https://semver.org/l
 - **MINOR** steigt bei neuen Funktionen, die bestehende Daten weiter lesen können.
 - **PATCH** steigt bei Fehlerbehebungen und kleinen Verbesserungen ohne neue Funktion.
 
+## [1.4.0] – 2026-11-02
+
+Prüfung aller Lizenzen und Nutzungsbedingungen vor der Veröffentlichung.
+
+### Neu
+- **Lizenzhinweise aller Komponenten:** `THIRD_PARTY_LICENSES.md` enthält die Lizenztexte aller 491 mitgelieferten
+  Komponenten (30 npm-Pakete, 461 Rust-Crates). In der App sind sie unter „Über Tourenplaner → Lizenzen aller
+  Komponenten anzeigen“ durchsuchbar. Erzeugt werden sie mit `npm run licenses`.
+- **Einstellungen → Online-Dienste:** Ortssuche und Wettervorhersage lassen sich ausschalten, und für Routing und
+  Ortssuche können eigene Server eingetragen werden. Mit Links zu den Nutzungsbedingungen. Die Einstellungen werden
+  mit der Gruppe synchronisiert.
+- **Demo-Modus** für die Browser-Vorschau (`?demo`) mit erfundenen Beispieldaten; Startansicht per URL wählbar
+- **Screenshots** in der README
+
+### Geändert
+- **Esri-Karten entfernt** (Straßenkarte und Satellit): Die Bedingungen erlauben eine kostenlose Nutzung ohne
+  Esri-Konto nicht eindeutig. Fällt OpenStreetMap aus, wird jetzt auf OpenTopoMap umgeschaltet.
+- **Höchstens eine Anfrage pro Sekunde** an Routing und Ortssuche, wie es FOSSGIS und Nominatim verlangen;
+  gleiche Suchanfragen kommen aus einem Zwischenspeicher.
+- **Eigener User-Agent** der App auch für die Kartenkacheln.
+- **Quellenangabe der Karte** mit Link „Fehler melden“ (verlangt von FOSSGIS/OSM); unter dem Wetter steht
+  „Wetterdaten: Open-Meteo.com (CC BY 4.0)“.
+- Die Diensteadressen sind nicht mehr fest auf einzelne Server beschränkt; erlaubt sind https-Adressen aus den
+  Einstellungen.
+- README: Abschnitt zu Nutzungsbedingungen und Datenschutz der Dienste sowie Lizenzübersicht der Komponenten
+
+### Behoben
+- **Ein Cent Rundungsdifferenz** bei „Wer zahlt wem?“: Salden und Überweisungen werden jetzt in ganzen Cent gerechnet
+  und gehen exakt auf.
+- Links in der App, z. B. die Quellenangaben der Karte, öffnen sich im Standardbrowser statt im App-Fenster.
+
 ## [1.3.0] – 2026-11-02
 
 ### Neu
@@ -94,6 +125,7 @@ Erste veröffentlichte Version.
 - Abgleich mit Nextcloud bzw. WebDAV
 - MIT-Lizenz
 
+[1.4.0]: ../../releases/tag/v1.4.0
 [1.3.0]: ../../releases/tag/v1.3.0
 [1.2.1]: ../../releases/tag/v1.2.1
 [1.2.0]: ../../releases/tag/v1.2.0

@@ -63,6 +63,13 @@ export const DEFAULT_CHECKLIST = [
   "Bargeld in Landeswährung",
 ];
 
+export const DEFAULT_SERVICES = {
+  routingUrl: "https://valhalla1.openstreetmap.de",
+  geocoding: true,
+  geocodingUrl: "https://nominatim.openstreetmap.org",
+  weather: true,
+};
+
 export function defaultSettings(): Settings {
   return {
     id: "settings",
@@ -75,12 +82,18 @@ export function defaultSettings(): Settings {
     defaultPauseMinutes: 90,
     tankReserve: 0.8,
     checklistTemplate: DEFAULT_CHECKLIST,
+    services: { ...DEFAULT_SERVICES },
   };
 }
 
 export function migrateSettings(s: Partial<Settings>): Settings {
   const d = defaultSettings();
-  return { ...d, ...s, defaultRouteOptions: { ...d.defaultRouteOptions, ...s.defaultRouteOptions } } as Settings;
+  return {
+    ...d,
+    ...s,
+    defaultRouteOptions: { ...d.defaultRouteOptions, ...s.defaultRouteOptions },
+    services: { ...d.services, ...s.services },
+  } as Settings;
 }
 
 /** Ältere Datensätze (vor 1.2.0) kennen nur Verbrenner. */

@@ -14,16 +14,23 @@
   <a href="#entstanden-mit-ki"><img src="https://img.shields.io/badge/entwickelt%20mit-Claude%20%28KI%29-d97757" alt="Entwickelt mit Claude (KI)"></a>
 </p>
 
+<p align="center">
+  <img src="docs/screenshots/overview.jpg" alt="Tour-Überblick mit Karte, Tagesplan und Zusammenfassung" width="900">
+</p>
+
+<p align="center"><sub>Beispieldaten mit erfundenen Namen (Demo-Modus, siehe <a href="#entwicklung">Entwicklung</a>)</sub></p>
+
 ---
 
 ## Inhalt
 
 - [Worum geht es?](#worum-geht-es)
 - [Funktionen](#funktionen)
+- [Screenshots](#screenshots)
 - [Installation](#installation)
 - [Erste Schritte](#erste-schritte)
 - [Gemeinsam nutzen mit Nextcloud](#gemeinsam-nutzen-mit-nextcloud)
-- [Online-Dienste und Datenschutz](#online-dienste-und-datenschutz)
+- [Online-Dienste, Nutzungsbedingungen und Datenschutz](#online-dienste-nutzungsbedingungen-und-datenschutz)
 - [Wo liegen die Daten?](#wo-liegen-die-daten)
 - [Entwicklung](#entwicklung)
 - [Projektstruktur](#projektstruktur)
@@ -119,6 +126,14 @@ So wird gerechnet:
 - Verbrauch und Kosten werden je Antrieb geschätzt und in den Kosten pro Person berücksichtigt. Sobald Ausgaben
   der Kategorie „Sprit“ bzw. „Laden“ erfasst sind, ersetzen sie die jeweilige Schätzung.
 
+## Screenshots
+
+| Etappenplaner mit Karte | Kosten teilen |
+| --- | --- |
+| <img src="docs/screenshots/stages.jpg" alt="Etappenplaner: Route auf der Karte, Wegpunkte, Mitfahrer der Etappe" width="440"> | <img src="docs/screenshots/costs.jpg" alt="Kosten: Ausgaben, Fremdwährung, Salden und „Wer zahlt wem?“" width="440"> |
+
+Alle Namen, Orte und Beträge in den Bildern sind erfunden.
+
 ## Installation
 
 ### Fertige Pakete
@@ -181,21 +196,41 @@ Der Abgleich läuft direkt aus der App per WebDAV. Der Nextcloud-Desktop-Client 
 
 Statt Nextcloud funktioniert jeder andere WebDAV-Server. Dann die vollständige WebDAV-URL als Server-Adresse eintragen.
 
-## Online-Dienste und Datenschutz
+## Online-Dienste, Nutzungsbedingungen und Datenschutz
 
-Die App nutzt nur freie Dienste ohne API-Schlüssel. Die Anfragen gehen über das Rust-Backend der App,
-und nur die folgenden Adressen sind freigegeben:
+Die App nutzt freie Dienste ohne API-Schlüssel. Sie werden ehrenamtlich oder gemeinnützig betrieben, und ihre
+**Nutzungsbedingungen gelten zusätzlich zur MIT-Lizenz der App**. Die MIT-Lizenz betrifft nur den Quellcode des
+Tourenplaners. Wer die App nutzt, muss sich auch an die Bedingungen dieser Dienste halten.
 
-| Zweck | Dienst | Was übertragen wird |
-| --- | --- | --- |
-| Routing (Motorrad) | [Valhalla](https://valhalla.github.io/valhalla/) auf `valhalla1.openstreetmap.de` (FOSSGIS e. V.) | Koordinaten der Wegpunkte |
-| Ortssuche und Ortsnamen | [Nominatim](https://nominatim.org/) auf `nominatim.openstreetmap.org` | Suchbegriff bzw. Koordinate |
-| Wetter | [Open-Meteo](https://open-meteo.com/) | Koordinate des Etappenziels, Datum |
-| Kartenkacheln | OpenStreetMap, Esri, OpenTopoMap | angezeigter Kartenausschnitt |
+| Zweck | Dienst (Standard) | Wichtigste Bedingungen | Übertragen wird |
+| --- | --- | --- | --- |
+| Routing (Motorrad) | [Valhalla](https://github.com/valhalla/valhalla) auf `valhalla1.openstreetmap.de`, betrieben vom FOSSGIS e. V. | höchstens 1 Anfrage pro Sekunde; eigener User-Agent; gewerbliche Nutzung nur, wenn der Dienst kein wesentlicher Teil eines Online-Angebots ist ([Bedingungen](https://www.fossgis.de/arbeitsgruppen/osm-server/nutzungsbedingungen/)) | Koordinaten der Wegpunkte |
+| Ortssuche und Ortsnamen | [Nominatim](https://nominatim.org/) auf `nominatim.openstreetmap.org` (OpenStreetMap Foundation) | höchstens 1 Anfrage pro Sekunde für alle Nutzer zusammen; nur vom Benutzer ausgelöste Suchen, keine Autovervollständigung; eigener User-Agent ([Richtlinie](https://operations.osmfoundation.org/policies/nominatim/)) | Suchbegriff bzw. Koordinate |
+| Wetter | [Open-Meteo](https://open-meteo.com/) | **kostenlos nur für nicht-kommerzielle Nutzung**; Daten unter CC BY 4.0 ([Bedingungen](https://open-meteo.com/en/terms)) | Koordinate des Etappenziels, Datum |
+| Kartenkacheln | [OpenStreetMap](https://operations.osmfoundation.org/policies/tiles/) und [OpenTopoMap](https://opentopomap.org/about) | sichtbare Quellenangabe; kein Massen-Download und kein Offline-Vorabladen; eigener User-Agent | angezeigter Kartenausschnitt |
 
-Namen, Kosten und andere Tourdaten verlassen den Rechner nur über den eigenen Nextcloud- bzw. WebDAV-Server.
-Bitte die Nutzungsbedingungen der öffentlichen Server beachten: Sie sind für gelegentliche private Nutzung gedacht,
-nicht für Massenabfragen.
+**So hält sich die App an diese Bedingungen**
+
+- **Eigener User-Agent:** Alle Anfragen nennen die App (`Tourenplaner/…`), auch die Kartenkacheln.
+- **Höchstens eine Anfrage pro Sekunde** je Dienst. Das Rust-Backend reiht die Anfragen nacheinander ein.
+- **Zwischenspeicher für die Ortssuche:** Gleiche Anfragen werden nicht erneut gestellt.
+- **Gesucht wird nur auf Knopfdruck**, ohne Autovervollständigung. Es gibt keine Abfragen im Hintergrund
+  und kein Herunterladen von Karten für unterwegs.
+- **Quellenangabe in der Karte:** „Daten © OpenStreetMap-Mitwirkende (ODbL)“ mit Link „Fehler melden“, bei OpenTopoMap
+  zusätzlich deren Lizenz. Unter dem Wetter steht „Wetterdaten: Open-Meteo.com (CC BY 4.0)“.
+- **Abschaltbar und austauschbar:** Unter *Einstellungen → Online-Dienste* lassen sich Ortssuche und Wetter ausschalten
+  und eigene Server für Routing und Ortssuche eintragen. Die Einstellungen werden mit der Gruppe synchronisiert,
+  eine Änderung gilt also für alle.
+
+**Hinweise für die Nutzung**
+
+- Für eine private Reisegruppe passt das alles. Wer die App **gewerblich** einsetzt, sollte die Wettervorhersage
+  ausschalten oder ein Open-Meteo-Abo abschließen. Für Routing und Ortssuche bieten sich dann eigene oder kommerzielle
+  Server an. [Valhalla](https://github.com/valhalla/valhalla) und [Nominatim](https://nominatim.org/) lassen sich selbst betreiben.
+- Die öffentlichen Server haben keine Verfügbarkeitsgarantie und können den Zugang jederzeit sperren.
+
+**Datenschutz:** Namen, Kosten und andere Tourdaten verlassen den Rechner nur über den eigenen Nextcloud- bzw.
+WebDAV-Server. An die Online-Dienste gehen nur Koordinaten, Suchbegriffe und Datumsangaben.
 
 ## Wo liegen die Daten?
 
@@ -247,6 +282,16 @@ npm run tauri dev      # Desktop-App mit Hot-Reload
 npm run dev            # nur die Oberfläche im Browser (http://localhost:1420), Daten im localStorage
 ```
 
+**Demo-Modus** (nur in der Browser-Vorschau): `http://localhost:1420/?demo` lädt eine erfundene Beispieltour
+und ersetzt dabei die Vorschau-Daten. Mit `?tour=demo-tour&tab=stages&stage=s2` oder `&tab=costs` öffnet sich direkt
+eine bestimmte Ansicht. Damit sind die Screenshots in `docs/screenshots/` entstanden.
+
+**Lizenzhinweise der Komponenten** nach dem Hinzufügen oder Aktualisieren von Abhängigkeiten neu erzeugen:
+
+```bash
+npm run licenses       # schreibt THIRD_PARTY_LICENSES.md und src/generated/third-party.json
+```
+
 **Tests**
 
 ```bash
@@ -268,7 +313,8 @@ cd src-tauri && TOURENPLANER_TEST_DAV=http://127.0.0.1:8765 cargo test --test sy
 ```
 ├── src/                      Oberfläche (React + TypeScript)
 │   ├── App.tsx               Navigation und Seitenaufbau
-│   ├── components/           Karte (Leaflet), Diagramme, Wetter, Eingabefelder, Info-Fenster
+│   ├── components/           Karte (Leaflet), Diagramme, Wetter, Eingabefelder, Info-Fenster, Lizenzliste
+│   ├── generated/            Liste der Komponenten mit Lizenz (erzeugt mit npm run licenses)
 │   ├── pages/                Übersicht, Touren, Mitfahrer, Statistik, Einstellungen
 │   │   └── tour/             Tabs einer Tour: Überblick, Etappen, Unterkünfte, Kosten, Checkliste, Dokumente
 │   ├── lib/
@@ -278,6 +324,7 @@ cd src-tauri && TOURENPLANER_TEST_DAV=http://127.0.0.1:8765 cargo test --test sy
 │   │   ├── geo.ts            Entfernungen, Polyline, Einfügeposition, GPX lesen/schreiben
 │   │   ├── services.ts       Routing, Ortssuche, Wetter
 │   │   ├── export.ts         GPX-Export und Roadbook-PDF
+│   │   ├── demo.ts           erfundene Beispieldaten für Screenshots
 │   │   └── api.ts            Aufrufe ins Rust-Backend (mit Browser-Ersatz für die Entwicklung)
 │   └── styles.css
 ├── src-tauri/                Desktop-Hülle und Backend (Rust, Tauri 2)
@@ -286,12 +333,15 @@ cd src-tauri && TOURENPLANER_TEST_DAV=http://127.0.0.1:8765 cargo test --test sy
 │   │   ├── store.rs          JSON-Datensätze und Dokumente im Datenordner
 │   │   ├── sync.rs           Zwei-Wege-Abgleich mit Konfliktbehandlung
 │   │   ├── webdav.rs         schlanker WebDAV-Client
-│   │   ├── web.rs            freigegebene Online-Dienste
+│   │   ├── web.rs            Online-Dienste: User-Agent, 1 Anfrage/s, Zwischenspeicher
 │   │   └── config.rs         lokale Einstellungen, Passwort im Schlüsselbund
 │   ├── tests/sync_dav.rs     Integrationstest gegen echten WebDAV-Server
 │   ├── icons/                App-Symbole (aus app-icon.svg erzeugt)
 │   └── tauri.conf.json
 ├── .github/workflows/build.yml   Builds für macOS, Windows und Linux
+├── scripts/                  Versionsnummer setzen, Lizenzhinweise erzeugen
+├── docs/screenshots/         Bilder für diese README
+├── THIRD_PARTY_LICENSES.md   Lizenztexte aller mitgelieferten Komponenten (erzeugt)
 └── app-icon.svg              Quelle des App-Symbols
 ```
 
@@ -348,8 +398,9 @@ git tag -a v1.2.0 -m "Version 1.2.0"
   kurvige Strecken plant man am besten in Kurviger oder Calimoto und importiert die Route als GPX.
 - Die öffentlichen Routing- und Suchserver haben Nutzungsgrenzen. Bei sehr vielen Anfragen kann es kurz zu Fehlern kommen.
 - Die Wettervorhersage gibt es frühestens 16 Tage vor der Etappe.
-- Blockiert der OpenStreetMap-Kachelserver die App, wechselt die Karte automatisch zur Esri-Straßenkarte.
-  Über das Ebenen-Symbol oben rechts lässt sich jederzeit umschalten.
+- Ist der OpenStreetMap-Kachelserver nicht erreichbar, wechselt die Karte automatisch zu OpenTopoMap.
+  Über das Ebenen-Symbol oben rechts lässt sich jederzeit umschalten. Eine Satellitenansicht gibt es nicht, weil
+  kein frei nutzbarer Anbieter ohne Konto bekannt ist.
 
 ## Entstanden mit KI
 
@@ -378,11 +429,37 @@ Gewährleistung bereitgestellt.
 Beiträge sind willkommen. Mit einem Pull Request erklärst du dich einverstanden, dass dein Beitrag ebenfalls
 unter der MIT-Lizenz steht.
 
-Verwendete Bibliotheken und Daten:
+### Verwendete Komponenten
 
-- [Tauri](https://tauri.app/), [React](https://react.dev/), [Vite](https://vitejs.dev/)
-- [Leaflet](https://leafletjs.com/) für die Karte, [jsPDF](https://github.com/parallax/jsPDF) für das Roadbook
-- Kartendaten © [OpenStreetMap](https://www.openstreetmap.org/copyright)-Mitwirkende (ODbL).
-  Kartenkacheln von OpenStreetMap, [OpenTopoMap](https://opentopomap.org/) (CC-BY-SA) und Esri
-- Routing: [Valhalla](https://github.com/valhalla/valhalla), betrieben vom [FOSSGIS e. V.](https://www.fossgis.de/)
-- Wetterdaten: [Open-Meteo](https://open-meteo.com/) (CC BY 4.0)
+Die App enthält rund 490 Komponenten anderer Autorinnen und Autoren: npm-Pakete für die Oberfläche und Rust-Crates
+für die Desktop-Hülle. Alle stehen unter freien Lizenzen, die mit der MIT-Lizenz vereinbar sind:
+
+| Lizenz | Bedeutung für dieses Projekt |
+| --- | --- |
+| MIT, BSD-2/3-Clause, ISC, Zlib, Apache-2.0, Unicode-3.0, CDLA-Permissive-2.0, 0BSD, Unlicense, CC0 | frei nutzbar; beim Weitergeben müssen Copyright und Lizenztext beiliegen |
+| MPL-2.0 (5 Rust-Crates aus Tauri, z. B. `cssparser`, `selectors`) | schwaches Copyleft auf Dateiebene: Die Dateien werden unverändert genutzt, ihr Quellcode ist öffentlich verlinkt |
+| wahlweise auch LGPL bzw. Apache (z. B. `r-efi`, `dompurify`) | es wird die freie Alternative (MIT bzw. Apache-2.0) genutzt |
+
+Die vollständigen Lizenztexte stehen in **[THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md)** und in der App unter
+*Über Tourenplaner → Lizenzen aller Komponenten anzeigen*. Damit sind die Hinweispflichten für die Weitergabe der
+App erfüllt. Die Dateien werden mit `npm run licenses` erzeugt.
+
+Wichtige Bausteine:
+
+- [Tauri](https://tauri.app/) (MIT/Apache-2.0), [React](https://react.dev/) (MIT), [Vite](https://vitejs.dev/) (MIT)
+- [Leaflet](https://leafletjs.com/) (BSD-2-Clause) für die Karte, [jsPDF](https://github.com/parallax/jsPDF) und
+  [jsPDF-AutoTable](https://github.com/simonbengtsson/jsPDF-AutoTable) (MIT) für das Roadbook
+- [reqwest](https://github.com/seanmonstar/reqwest), [rustls](https://github.com/rustls/rustls), [quick-xml](https://github.com/tafia/quick-xml),
+  [keyring](https://github.com/hwchen/keyring-rs) (MIT/Apache-2.0) für Sync und Online-Dienste
+
+### Daten und Dienste
+
+- Kartendaten © [OpenStreetMap](https://www.openstreetmap.org/copyright)-Mitwirkende, verfügbar unter der
+  [Open Database License (ODbL)](https://opendatacommons.org/licenses/odbl/). Exportierte GPX-Routen beruhen auf diesen Daten.
+- Kartenkacheln: OpenStreetMap Foundation; [OpenTopoMap](https://opentopomap.org/) (CC-BY-SA 3.0)
+- Routing: [Valhalla](https://github.com/valhalla/valhalla) (MIT), Server des [FOSSGIS e. V.](https://www.fossgis.de/)
+- Ortssuche: [Nominatim](https://nominatim.org/), Server der OpenStreetMap Foundation
+- Wetterdaten: [Open-Meteo.com](https://open-meteo.com/) (CC BY 4.0)
+
+Die Bedingungen der Dienste stehen im Abschnitt
+[Online-Dienste, Nutzungsbedingungen und Datenschutz](#online-dienste-nutzungsbedingungen-und-datenschutz).

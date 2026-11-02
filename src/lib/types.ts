@@ -154,6 +154,18 @@ export interface Settings {
   /** Sicherheitsfaktor auf die Tankreichweite (0,8 = nach 80 % tanken) */
   tankReserve: number;
   checklistTemplate: string[];
+  services: ServiceSettings;
+}
+
+/** Online-Dienste – für alle in der Gruppe gleich, da die Einstellungen mitsynchronisiert werden */
+export interface ServiceSettings {
+  /** Valhalla-Server (https://…), ohne /route */
+  routingUrl: string;
+  /** Ortssuche an/aus und Nominatim-Server */
+  geocoding: boolean;
+  geocodingUrl: string;
+  /** Wettervorhersage (Open-Meteo, kostenlos nur für nicht-kommerzielle Nutzung) */
+  weather: boolean;
 }
 
 export interface FileMeta {
