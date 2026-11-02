@@ -38,7 +38,7 @@ export default function Statistics({ nav }: { nav: Nav }) {
   // Mitfahrer: Touren, km und Anteil an Kosten
   const members = store.members.map((m) => {
     const ts = all.filter((x) => x.tour.memberIds.includes(m.id));
-    const km = ts.reduce((a, x) => a + x.sum.stages.filter((s) => s.ridden).reduce((b, s) => b + stageKm(s), 0), 0);
+    const km = ts.reduce((a, x) => a + x.sum.memberKm(m.id), 0);
     const share = ts.reduce((a, x) => a + (balances(x.tour.memberIds, x.sum.items).find((b) => b.memberId === m.id)?.share ?? 0), 0);
     return { m, tours: ts.length, km: Math.round(km), share };
   });

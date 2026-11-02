@@ -1751,3 +1751,7 @@ tr.derived td {
   border-top: 1px solid var(--border);
   padding-top: 8px;
 }
+.rider-dots {
+  margin-left: 8px;
+  vertical-align: middle;
+}

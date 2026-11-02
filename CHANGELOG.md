@@ -8,6 +8,26 @@ Die Versionsnummern folgen der [semantischen Versionierung](https://semver.org/l
 - **MINOR** steigt bei neuen Funktionen, die bestehende Daten weiter lesen können.
 - **PATCH** steigt bei Fehlerbehebungen und kleinen Verbesserungen ohne neue Funktion.
 
+## [1.3.0] – 2026-11-02
+
+### Neu
+- **Mitfahrer je Etappe:** Bei jeder Etappe lässt sich unter „Wer fährt mit?“ ein Teil der Gruppe auswählen,
+  z. B. Anreise und Rückreise nur für einen Teil, die Rundfahrt mit allen. Ohne Auswahl fahren wie bisher alle mit.
+  Sind alle ausgewählt, wird das als „alle“ gespeichert; später hinzukommende Mitfahrer sind dann automatisch dabei.
+- Etappenliste, Tagesplan im Überblick und Roadbook (Spalte „Wer“) zeigen, wer bei Teil-Etappen mitfährt.
+
+### Geändert
+- **Tank- und Ladestopps** einer Etappe richten sich nach der kleinsten Reichweite der Motorräder, die diese
+  Etappe fahren. Fährt das E-Motorrad nicht mit, entfallen Ladestopps und Ladezeit.
+- **Sprit- und Stromschätzung** summiert über alle Etappen, jeweils nur für die Mitfahrenden. Bisher wurden
+  alle Motorräder der Tour für die ganze Strecke gerechnet.
+- **Gefahrene km je Mitfahrer** (Mitfahrer-Seite und Statistik) zählen nur Etappen, die die Person
+  mitgefahren ist.
+- **Neue Ausgabe:** Fahren an dem Tag nicht alle, wird sie zunächst nur auf die Mitfahrenden des Tages verteilt.
+
+### Kompatibilität
+- Bestehende Etappen haben keine Auswahl und gelten weiter als „alle fahren mit“; Ergebnisse ändern sich dort nicht.
+
 ## [1.2.1] – 2026-11-02
 
 ### Behoben
@@ -74,6 +94,7 @@ Erste veröffentlichte Version.
 - Abgleich mit Nextcloud bzw. WebDAV
 - MIT-Lizenz
 
+[1.3.0]: ../../releases/tag/v1.3.0
 [1.2.1]: ../../releases/tag/v1.2.1
 [1.2.0]: ../../releases/tag/v1.2.0
 [1.1.0]: ../../releases/tag/v1.1.0

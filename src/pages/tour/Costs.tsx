@@ -2,7 +2,7 @@ import { Fragment, useState } from "react";
 import { BarList } from "../../components/charts";
 import { MemberDot, MemberPicker } from "../../components/common";
 import { Empty, NumberInput } from "../../components/ui";
-import { balances, byCategory, expenseAmount, settle } from "../../lib/calc";
+import { balances, byCategory, expenseAmount, normalizeRiders, settle } from "../../lib/calc";
 import { CATEGORIES, CURRENCIES, newExpense } from "../../lib/defaults";
 import { date, money, num } from "../../lib/format";
 import { useStore } from "../../lib/store";
@@ -31,7 +31,9 @@ export default function Costs({ tour, sum }: { tour: Tour; sum: TourSummary }) {
     const today = new Date().toISOString().slice(0, 10);
     const d = today >= tour.startDate && today <= tour.endDate ? today : (last?.date ?? tour.startDate);
     const payer = tour.memberIds.includes(store.me) ? store.me : (tour.memberIds[0] ?? "");
-    store.save("expenses", newExpense(tour, payer, d));
+    // Fahren an dem Tag nicht alle, wird die Ausgabe zunächst nur auf die Mitfahrenden verteilt.
+    const riders = new Set(sum.stages.filter((s) => s.date === d).flatMap((s) => sum.ridersOf(s).map((m) => m.id)));
+    store.save("expenses", { ...newExpense(tour, payer, d), splitAmong: riders.size ? normalizeRiders([...riders], tour.memberIds) : [] });
   };
 
   const copyText = async () => {
@@ -243,13 +245,13 @@ export default function Costs({ tour, sum }: { tour: Tour; sum: TourSummary }) {
             <h2>Energieschätzung</h2>
             {sum.energy?.fuel && !sum.hasFuelExpenses && (
               <p className="small">
-                ⛽ {num(sum.stats.km, 0)} km × Verbrauch der Verbrenner ≈ <strong>{num(sum.energy.fuel.amount, 1)} l</strong> × {money(tour.fuelPrice, cur)} ={" "}
+                ⛽ Verbrenner, je Etappe nur die Mitfahrenden ≈ <strong>{num(sum.energy.fuel.amount, 1)} l</strong> × {money(tour.fuelPrice, cur)} ={" "}
                 <strong>{m(sum.energy.fuel.cost)}</strong>
               </p>
             )}
             {sum.energy?.electric && !sum.hasChargingExpenses && (
               <p className="small">
-                🔌 {num(sum.stats.km, 0)} km × Verbrauch der E-Motorräder ≈ <strong>{num(sum.energy.electric.amount, 1)} kWh</strong> × {money(tour.electricityPrice, cur)} ={" "}
+                🔌 E-Motorräder, je Etappe nur die Mitfahrenden ≈ <strong>{num(sum.energy.electric.amount, 1)} kWh</strong> × {money(tour.electricityPrice, cur)} ={" "}
                 <strong>{m(sum.energy.electric.cost)}</strong>
               </p>
             )}

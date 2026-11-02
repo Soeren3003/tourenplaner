@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import type { TourTab } from "../../App";
-import { MemberPicker } from "../../components/common";
+import { MemberDot, MemberPicker } from "../../components/common";
 import MapView, { type MapLine, type MapMarker } from "../../components/MapView";
 import { Field, NumberInput } from "../../components/ui";
 import { Weather } from "../../components/Weather";
@@ -114,6 +114,13 @@ export default function Overview({ tour, sum, go }: { tour: Tour; sum: TourSumma
                     <td>
                       {s.title || s.waypoints.map((w) => w.name.split(",")[0]).filter(Boolean).join(" → ") || <span className="muted">Ohne Route</span>}
                       {s.ridden && <span className="badge badge-purple small-badge">gefahren</span>}
+                      {s.memberIds?.length > 0 && (
+                        <span className="dots rider-dots" title={`Nur: ${sum.ridersOf(s).map((m) => m.name).join(", ")}`}>
+                          {sum.ridersOf(s).map((m) => (
+                            <MemberDot key={m.id} member={m} size={16} />
+                          ))}
+                        </span>
+                      )}
                     </td>
                     <td className="r">{num(s.actualKm ?? s.distanceKm, 0)}</td>
                     <td className="r">{duration(s.actualMin ?? s.durationMin)}</td>

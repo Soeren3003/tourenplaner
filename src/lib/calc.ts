@@ -123,6 +123,18 @@ export function sortStages(stages: Stage[]) {
   return stages.slice().sort((a, b) => a.date.localeCompare(b.date) || a.order - b.order || a.createdAt.localeCompare(b.createdAt));
 }
 
+/** Mitfahrer einer Etappe; ohne Auswahl (oder ältere Daten) fahren alle der Tour mit. */
+export function stageRiders<T extends { id: string }>(stage: Pick<Stage, "memberIds">, tourMembers: T[]): T[] {
+  const ids = (stage.memberIds ?? []).filter((id) => tourMembers.some((m) => m.id === id));
+  return ids.length ? tourMembers.filter((m) => ids.includes(m.id)) : tourMembers;
+}
+
+/** Auswahl speichern: alle ausgewählt = leer (damit später hinzukommende Mitfahrer automatisch dabei sind) */
+export function normalizeRiders(ids: string[], tourMemberIds: string[]) {
+  const valid = ids.filter((id) => tourMemberIds.includes(id));
+  return valid.length === tourMemberIds.length ? [] : valid;
+}
+
 /** gefahrene Werte, sonst geplante */
 export const stageKm = (s: Stage) => s.actualKm ?? s.distanceKm;
 export const stageMin = (s: Stage) => s.actualMin ?? s.durationMin;

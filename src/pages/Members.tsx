@@ -2,10 +2,10 @@ import { useState } from "react";
 import { MemberDot } from "../components/common";
 import { DurationInput, Empty, Field, NumberInput } from "../components/ui";
 import { confirmDialog } from "../lib/api";
-import { sortStages, tourStats } from "../lib/calc";
 import { DRIVE_DEFAULTS, newMember, PALETTE } from "../lib/defaults";
 import { num } from "../lib/format";
 import { useStore } from "../lib/store";
+import { summarize } from "../lib/summary";
 import type { Drive, Member } from "../lib/types";
 
 export default function Members({ selected }: { selected?: string }) {
@@ -61,7 +61,7 @@ function MemberEditor({ m, onDeleted }: { m: Member; onDeleted: () => void }) {
   const set = (patch: Partial<Member>) => store.save("members", { ...m, ...patch });
   const electric = m.drive === "electric";
   const tours = store.tours.filter((t) => t.memberIds.includes(m.id));
-  const ridden = tours.reduce((sum, t) => sum + tourStats(sortStages(store.stages.filter((s) => s.tourId === t.id && s.ridden))).km, 0);
+  const ridden = tours.reduce((a, t) => a + summarize(t, store).memberKm(m.id), 0);
 
   const remove = async () => {
     const used = tours.length;

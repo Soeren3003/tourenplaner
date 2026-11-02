@@ -75,6 +75,8 @@ export interface Stage extends Entity {
   date: string;
   /** Reihenfolge innerhalb eines Tages (mehrere Etappen am selben Tag) */
   order: number;
+  /** Wer fährt diese Etappe? Leer = alle Mitfahrer der Tour */
+  memberIds: string[];
   title: string;
   /** Abfahrtszeit „09:00“ */
   departure: string;

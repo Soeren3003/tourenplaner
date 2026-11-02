@@ -64,9 +64,12 @@ export async function exportRoadbook(tour: Tour, sum: TourSummary) {
   };
 
   const hotelOn = (d: string) => sum.hotels.find((h) => h.checkIn === d && h.status !== "cancelled");
+  // Spalte „Wer“ nur, wenn nicht immer alle mitfahren
+  const partial = sum.stages.some((s) => s.memberIds?.length);
+  const who = (s: Stage) => (s.memberIds?.length ? sum.ridersOf(s).map((m) => m.name).join(", ") : "alle");
   table(
     "Etappen",
-    ["Tag", "Datum", "Strecke", "km", "Fahrzeit", "Abfahrt – Ankunft", "Übernachtung"],
+    ["Tag", "Datum", "Strecke", "km", "Fahrzeit", "Abfahrt – Ankunft", "Übernachtung", ...(partial ? ["Wer"] : [])],
     sum.stages.map((s) => [
       String(dayNo(tour, s)),
       date(s.date),
@@ -75,6 +78,7 @@ export async function exportRoadbook(tour: Tour, sum: TourSummary) {
       duration(s.durationMin),
       `${s.departure} – ${arrival(s, sum.stageEnergy.get(s.id)?.chargeMinutes)}`,
       hotelOn(s.date)?.name ?? "",
+      ...(partial ? [who(s)] : []),
     ]),
   );
 

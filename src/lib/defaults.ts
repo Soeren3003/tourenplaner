@@ -140,6 +140,7 @@ export function newStage(s: Settings, tourId: string, date: string, order = 0): 
     tourId,
     date,
     order,
+    memberIds: [],
     title: "",
     departure: s.defaultDeparture,
     pauseMinutes: s.defaultPauseMinutes,

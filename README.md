@@ -66,6 +66,9 @@ Die App läuft lokal auf dem eigenen Rechner. Ein Konto oder ein eigener Server 
 - **GPX-Export** für Garmin, TomTom, Calimoto & Co., als Route und Track
 - Etappe in Google Maps öffnen
 - „Nächste Etappe ab hier“: Die neue Etappe startet am Ziel bzw. am Hotel des Vortags.
+- **Mitfahrer je Etappe**: Ohne Auswahl fahren alle mit. Es lassen sich aber auch einzelne Personen wählen,
+  z. B. Tag 1 Anreise nur für B und C zum Wohnort von A, Tag 2 Rundfahrt mit allen, Tag 3 Rückreise nur für B und C.
+  Tank- und Ladestopps, Verbrauch, die km-Statistik je Person und die vorgeschlagene Kostenaufteilung richten sich danach.
 - Tatsächlich gefahrene km und Fahrzeit nachtragen
 
 ### Unterkünfte
@@ -106,6 +109,7 @@ Bei jedem Mitfahrer lässt sich der Antrieb wählen: **Verbrenner** oder **Elekt
 
 So wird gerechnet:
 
+- Gerechnet wird je Etappe nur mit den Motorrädern, die diese Etappe mitfahren.
 - Für jeden Antrieb zählt die **kleinste Reichweite** der Motorräder mit diesem Antrieb, abzüglich der Reserve
   (*Einstellungen → Planung → Reichweiten-Reserve*, Standard 80 %). Fährt ein E-Motorrad mit, bestimmt es
   meist den Takt der Gruppe.
@@ -149,7 +153,9 @@ Siehe [Entwicklung](#entwicklung) und [Bauen und Veröffentlichen](#bauen-und-ve
    Zwischenziele dazwischen setzen. Die Route wird automatisch berechnet.
 4. Im Tab **Unterkünfte** die Hotels eintragen. Bei einem Hotel für den Etappentag lässt es sich per
    „Hotel als Ziel“ direkt als Etappenziel übernehmen.
+   Fährt eine Etappe nicht die ganze Gruppe, bei der Etappe unter **„Wer fährt mit?“** die Personen auswählen.
 5. Unterwegs im Tab **Kosten** die Ausgaben erfassen. Am Ende steht dort, wer wem wie viel überweist.
+   Eine neue Ausgabe wird zunächst auf die Personen verteilt, die an dem Tag fahren; das lässt sich je Ausgabe ändern.
 
 ## Gemeinsam nutzen mit Nextcloud
 

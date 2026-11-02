@@ -1,4 +1,4 @@
-import { costItems, energyInfo, sortStages, tourStats, type EnergyInfo } from "./calc";
+import { costItems, energyInfo, sortStages, stageKm, stageRiders, tourStats, type EnergyInfo } from "./calc";
 import type { Expense, Hotel, Member, Settings, Stage, Tour } from "./types";
 
 interface Data {
@@ -18,10 +18,28 @@ export function summarize(tour: Tour, d: Data) {
   const stats = tourStats(stages);
   const costs = items.reduce((a, i) => a + i.amount, 0);
   const prices = { fuel: tour.fuelPrice, electricity: tour.electricityPrice ?? d.settings.defaultElectricityPrice };
-  // Stopps je Etappe (über Nacht wird voll getankt bzw. geladen), Verbrauch über die ganze Tour
-  const stageEnergy = new Map<string, EnergyInfo | null>(stages.map((s) => [s.id, energyInfo(s.distanceKm, members, d.settings.tankReserve, prices)]));
-  const energy = energyInfo(stats.km, members, d.settings.tankReserve, prices);
+  const ridersOf = (s: Stage) => stageRiders(s, members);
+  // Stopps je Etappe mit den Mitfahrern dieser Etappe (über Nacht wird voll getankt bzw. geladen)
+  const stageEnergy = new Map<string, EnergyInfo | null>(stages.map((s) => [s.id, energyInfo(s.distanceKm, ridersOf(s), d.settings.tankReserve, prices)]));
   const stopsOf = (k: "fuel" | "electric") => [...stageEnergy.values()].reduce((a, e) => a + (e?.[k]?.stops ?? 0), 0);
+  // Verbrauch: Summe über alle Etappen, jeweils nur für die Motorräder, die mitfahren (gefahrene km, sonst geplante)
+  const total = (k: "fuel" | "electric") => {
+    let amount = 0;
+    let cost = 0;
+    let any = false;
+    for (const s of stages) {
+      const e = energyInfo(stageKm(s), ridersOf(s), d.settings.tankReserve, prices)?.[k];
+      if (!e) continue;
+      any = true;
+      amount += e.amount;
+      cost += e.cost;
+    }
+    return any ? { amount: Math.round(amount * 10) / 10, cost: Math.round(cost * 100) / 100 } : null;
+  };
+  const energy = { fuel: total("fuel"), electric: total("electric") };
+  /** gefahrene km eines Mitfahrers auf dieser Tour (nur Etappen, die er mitgefahren ist) */
+  const memberKm = (id: string, onlyRidden = true) =>
+    stages.filter((s) => (!onlyRidden || s.ridden) && ridersOf(s).some((m) => m.id === id)).reduce((a, s) => a + stageKm(s), 0);
   const hasFuelExpenses = items.some((i) => i.category === "fuel");
   const hasChargingExpenses = items.some((i) => i.category === "charging");
   const people = Math.max(1, members.length);
@@ -37,6 +55,8 @@ export function summarize(tour: Tour, d: Data) {
     costs,
     energy,
     stageEnergy,
+    ridersOf,
+    memberKm,
     fuelStops: stopsOf("fuel"),
     chargeStops: stopsOf("electric"),
     hasFuelExpenses,

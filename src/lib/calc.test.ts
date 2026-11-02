@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from "vitest";
-import { arrival, balances, costItems, energyInfo, settle } from "./calc";
+import { arrival, balances, costItems, energyInfo, normalizeRiders, settle, stageRiders } from "./calc";
+import { summarize } from "./summary";
 import { newExpense, newHotel, newMember, newStage, newTour, defaultSettings, migrateMember } from "./defaults";
 import { bestInsertIndex, buildGpx, decodePolyline, encodePolyline, parseGpx } from "./geo";
 
@@ -131,5 +132,32 @@ describe("Geo", () => {
     expect(r.name).toBe("Test & Co");
     expect(r.track).toHaveLength(3);
     expect(r.waypoints.map((w) => w.name)).toEqual(["Start", "Ziel"]);
+  });
+});
+
+describe("Mitfahrer je Etappe", () => {
+  it("ohne Auswahl fahren alle, sonst nur die gewählten", () => {
+    const { a, b, c } = setup();
+    expect(stageRiders({ memberIds: [] }, [a, b, c])).toEqual([a, b, c]);
+    expect(stageRiders({ memberIds: [b.id, c.id] }, [a, b, c])).toEqual([b, c]);
+    // ausgetretene Mitfahrer zählen nicht; bleibt niemand übrig, fahren alle
+    expect(stageRiders({ memberIds: ["weg"] }, [a, b])).toEqual([a, b]);
+  });
+
+  it("alle ausgewählt wird als „alle“ gespeichert", () => {
+    expect(normalizeRiders(["x", "y"], ["x", "y"])).toEqual([]);
+    expect(normalizeRiders(["x", "z"], ["x", "y"])).toEqual(["x"]);
+  });
+
+  it("Anreise zu zweit, Rundfahrt mit allen: Verbrauch und km je Person", () => {
+    const { a, b, c, tour } = setup();
+    const members = [a, b, c].map((m) => ({ ...m, consumption: 5, tankRangeKm: 400 }));
+    const st = (date: string, memberIds: string[]) => ({ ...newStage(s, tour.id, date), memberIds, distanceKm: 200, ridden: true });
+    const stages = [st(tour.startDate, [b.id, c.id]), st(tour.endDate, [])];
+    const sum = summarize(tour, { stages, hotels: [], expenses: [], members, settings: s });
+    // Tag 1: 2 × 10 l, Tag 2: 3 × 10 l
+    expect(sum.energy.fuel?.amount).toBe(50);
+    expect(sum.memberKm(a.id)).toBe(200);
+    expect(sum.memberKm(b.id)).toBe(400);
   });
 });

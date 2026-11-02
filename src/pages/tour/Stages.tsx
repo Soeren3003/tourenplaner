@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { MemberDot, MemberPicker } from "../../components/common";
 import MapView, { type MapLine, type MapMarker } from "../../components/MapView";
 import { DurationInput, Empty, Field, NumberInput } from "../../components/ui";
 import { Weather } from "../../components/Weather";
 import { api, confirmDialog, pickTextFile } from "../../lib/api";
-import { arrival, energyInfo, type EnergyGroup } from "../../lib/calc";
+import { arrival, energyInfo, normalizeRiders, type EnergyGroup } from "../../lib/calc";
 import { addDays, newStage, uid } from "../../lib/defaults";
 import { dayNo, exportGpx } from "../../lib/export";
 import { date, duration, num } from "../../lib/format";
@@ -58,6 +59,13 @@ export default function Stages({ tour, sum, stageId, select }: { tour: Tour; sum
                     Tag {dayNo(tour, s)} <span className="muted small">· {date(s.date)}</span>
                   </div>
                   <div className="muted small ellipsis">{s.title || s.waypoints.map((w) => w.name.split(",")[0]).filter(Boolean).join(" → ") || "Ohne Route"}</div>
+                  {s.memberIds?.length > 0 && (
+                    <span className="dots" title={`Nur: ${sum.ridersOf(s).map((m) => m.name).join(", ")}`}>
+                      {sum.ridersOf(s).map((m) => (
+                        <MemberDot key={m.id} member={m} size={14} />
+                      ))}
+                    </span>
+                  )}
                 </div>
                 <div className="r small">
                   <div>{num(s.actualKm ?? s.distanceKm, 0)} km</div>
@@ -160,7 +168,8 @@ function StageEditor({ tour, sum, stage, onNext, onDeleted }: { tour: Tour; sum:
   const reverse = () => setWaypoints(stage.waypoints.slice().reverse());
 
   // ---------- Tank- und Ladestopps ----------
-  const energy = energyInfo(stage.distanceKm, sum.members, store.settings.tankReserve, {
+  const riders = sum.ridersOf(stage);
+  const energy = energyInfo(stage.distanceKm, riders, store.settings.tankReserve, {
     fuel: tour.fuelPrice,
     electricity: tour.electricityPrice ?? store.settings.defaultElectricityPrice,
   });
@@ -396,6 +405,16 @@ function StageEditor({ tour, sum, stage, onNext, onDeleted }: { tour: Tour; sum:
               <Field label="Titel">
                 <input value={stage.title} placeholder="z. B. Über Stilfser Joch nach Bormio" onChange={(e) => set({ title: e.target.value })} />
               </Field>
+              {sum.members.length > 1 && (
+                <Field label="Wer fährt mit?" hint="z. B. Anreise oder Rückreise nur für einen Teil der Gruppe. Bestimmt Tank-/Ladestopps, Verbrauch und die km je Person.">
+                  <MemberPicker
+                    members={sum.members}
+                    selected={stage.memberIds ?? []}
+                    allLabel="Alle"
+                    onChange={(ids) => set({ memberIds: normalizeRiders(ids, tour.memberIds) })}
+                  />
+                </Field>
+              )}
               <div className="row two">
                 <Field label="Datum">
                   <select value={stage.date} onChange={(e) => set({ date: e.target.value })}>
