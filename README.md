@@ -376,14 +376,6 @@ Der Workflow `.github/workflows/build.yml` führt die Tests aus und baut alle dr
   Das Tag muss zur Versionsnummer in `package.json` passen, sonst bricht der Workflow ab.
 - **Nur bauen:** manuell unter *Actions → Build → Run workflow*. Die Installer hängen dann als Artefakte am Lauf.
 
-### Codeberg
-
-Codeberg nutzt Forgejo Actions. Der Workflow ist weitgehend kompatibel, braucht dort aber einen Runner mit macOS
-bzw. Windows, und den bietet Codeberg nicht an. Praktikabel sind zwei Wege:
-
-- das Repository auf Codeberg pflegen und nach GitHub spiegeln, nur um dort zu bauen
-- die Pakete lokal bauen und als Release-Anhänge hochladen
-
 ### Versionen
 
 Die Versionsnummern folgen der [semantischen Versionierung](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).

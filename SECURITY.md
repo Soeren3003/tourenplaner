@@ -3,7 +3,7 @@
 ## Sicherheitslücken melden
 
 Bitte melde vermutete Sicherheitslücken **nicht als öffentliches Issue**. Schreibe stattdessen eine Nachricht
-an **Soeren3003** über die Kontaktmöglichkeit im Codeberg-Profil. Beschreibe darin kurz:
+an **[Soeren3003](https://github.com/Soeren3003)** über die Kontaktmöglichkeit im GitHub-Profil. Beschreibe darin kurz:
 
 - was passiert und wie es sich nachstellen lässt,
 - welche Version betroffen ist (siehe *Über Tourenplaner*),
