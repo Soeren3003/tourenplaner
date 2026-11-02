@@ -1,7 +1,7 @@
 {
   "name": "tourenplaner",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Motorradtouren in der Gruppe planen: Etappen, Unterkünfte, Kosten und Statistik",
   "license": "MIT",
   "author": "Soeren3003",
@@ -11,7 +11,8 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "set-version": "node scripts/set-version.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.1.1",

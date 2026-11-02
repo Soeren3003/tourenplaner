@@ -297,10 +297,19 @@ bzw. Windows, und den bietet Codeberg nicht an. Praktikabel sind zwei Wege:
 - das Repository auf Codeberg pflegen und nach GitHub spiegeln, nur um dort zu bauen
 - die Pakete lokal bauen und als Release-Anhänge hochladen
 
-### Version erhöhen
+### Versionen
 
-Die Versionsnummer steht an drei Stellen und sollte überall gleich sein:
-`package.json`, `src-tauri/Cargo.toml` und `src-tauri/tauri.conf.json`.
+Die Versionsnummern folgen der [semantischen Versionierung](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
+Was sich in welcher Version geändert hat, steht im [CHANGELOG.md](CHANGELOG.md).
+
+So entsteht eine neue Version:
+
+```bash
+npm run set-version -- 1.2.0     # setzt die Nummer in package.json, Cargo.toml, tauri.conf.json und den Lockfiles
+# CHANGELOG.md ergänzen, dann:
+git commit -am "Version 1.2.0"
+git tag -a v1.2.0 -m "Version 1.2.0"
+```
 
 ## Bekannte Einschränkungen
 
